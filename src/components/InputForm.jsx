@@ -12,6 +12,7 @@ import { EVENTS } from './EventSelector.jsx'
  * kind:      'currency' | 'small' | 'state' | 'filing' | 'bool'
  * valueType: 'income' | 'number' | 'percentage' (omitted for state/filing/bool)
  */
+// eslint-disable-next-line react-refresh/only-export-components -- shared field schema consumed by App.jsx
 export const EVENT_FIELDS = {
   marriage: [
     { key: 'income', label: 'Your annual income', kind: 'currency', valueType: 'income', placeholder: '75,000', required: true },

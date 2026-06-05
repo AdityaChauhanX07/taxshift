@@ -27,6 +27,7 @@ Rules:
 - Be warm, specific, and helpful — not robotic or generic
 - Do not use bullet points or headers — write in flowing prose`
 
+// eslint-disable-next-line no-undef -- server-side Vercel function; `process` is valid here
 const client = new Anthropic({ apiKey: process.env.CLAUDE_API_KEY })
 
 export default async function handler(req, res) {

@@ -95,7 +95,7 @@ export function calculateLifeEvent(eventId, formData = {}) {
 
   let before
   let after
-  let breakdown = []
+  let breakdown
 
   switch (eventId) {
     case 'marriage': {

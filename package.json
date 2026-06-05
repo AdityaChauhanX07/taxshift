@@ -1,7 +1,8 @@
 {
   "name": "taxshift",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "See how your next life event changes your taxes — before it happens",
   "type": "module",
   "scripts": {
     "dev": "vite",

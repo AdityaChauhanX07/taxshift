@@ -5,6 +5,7 @@ import { COLORS, FONTS } from '../utils/theme.js'
  * The six supported life events, in display order. Exported so InputForm can
  * reuse the titles without duplicating the list.
  */
+// eslint-disable-next-line react-refresh/only-export-components -- shared event list consumed by App.jsx and InputForm.jsx
 export const EVENTS = [
   {
     id: 'marriage',
