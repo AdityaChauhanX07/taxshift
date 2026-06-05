@@ -261,7 +261,7 @@ export default function InputForm({ eventId, formData, onChange, onCalculate, on
           margin: '0 0 22px',
         }}
       >
-        {title} — your numbers
+        {title} - your numbers
       </h2>
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'flex-end' }}>

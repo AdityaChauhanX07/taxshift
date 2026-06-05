@@ -89,7 +89,7 @@ export function calculateLifeEvent(eventId, formData = {}) {
    *
    * Credits are non-refundable here: they can reduce federal liability to $0
    * but never below it (so the total can be $0 but never negative). We don't
-   * model the refundable Additional Child Tax Credit — the disclaimer covers
+   * model the refundable Additional Child Tax Credit - the disclaimer covers
    * that simplification.
    */
   const scenario = (federal, state, credits = 0, seTax = 0) => {

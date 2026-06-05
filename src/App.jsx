@@ -221,7 +221,7 @@ export default function App() {
               margin: '12px 0 0',
             }}
           >
-            See how your next life event changes your taxes — before it happens
+            See how your next life event changes your taxes - before it happens
           </p>
         </header>
 
@@ -283,7 +283,7 @@ export default function App() {
               margin: 0,
             }}
           >
-            TaxShift — DSOC Summer Edition 2026 · Tax, Compliance &amp; Regulatory Innovation
+            TaxShift - DSOC Summer Edition 2026 · Tax, Compliance &amp; Regulatory Innovation
           </p>
         </footer>
       </div>

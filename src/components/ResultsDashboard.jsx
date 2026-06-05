@@ -75,7 +75,7 @@ export default function ResultsDashboard({ results, totalIncome, aiEnhancing, on
   const saves = delta > 0
   const costs = delta < 0
   const heroColor = saves ? COLORS.savings : costs ? COLORS.cost : COLORS.textPrimary
-  const heroLabel = saves ? '/ year saved' : costs ? '/ year more tax' : '/ year — no change'
+  const heroLabel = saves ? '/ year saved' : costs ? '/ year more tax' : '/ year - no change'
 
   const chartData = breakdown.filter((d) => d.value !== 0 && d.type !== 'absolute')
   const chartHeight = Math.max(120, chartData.length * 46 + 30)

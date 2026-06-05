@@ -24,15 +24,15 @@ Rules:
 - Reference their actual dollar amounts
 - Never say 'consult a tax professional' (the app disclaimer handles that)
 - Keep total response under 150 words
-- Be warm, specific, and helpful — not robotic or generic
-- Do not use bullet points or headers — write in flowing prose`
+- Be warm, specific, and helpful - not robotic or generic
+- Do not use bullet points or headers - write in flowing prose`
 
 // eslint-disable-next-line no-undef -- server-side Vercel function; `process` is valid here
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
 const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
 
 export default async function handler(req, res) {
-  // CORS — permit local dev and preflight.
+  // CORS - permit local dev and preflight.
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
@@ -77,7 +77,7 @@ Key factors: ${factors}`
 
     res.status(200).json({ insight: text || null })
   } catch {
-    // Never surface an error — the frontend fallback covers this silently.
+    // Never surface an error - the frontend fallback covers this silently.
     res.status(200).json({ insight: null })
   }
 }
