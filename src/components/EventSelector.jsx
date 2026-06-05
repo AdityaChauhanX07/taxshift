@@ -60,7 +60,7 @@ export default function EventSelector({ selectedEvent, onSelect }) {
         What's changing?
       </h2>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {EVENTS.map((event, i) => {
           const selected = selectedEvent === event.id
           const isHovered = hovered === event.id && !selected
@@ -70,6 +70,7 @@ export default function EventSelector({ selectedEvent, onSelect }) {
             <button
               key={event.id}
               type="button"
+              className={`ts-event-card${selected ? ' is-selected' : ''}`}
               onClick={() => onSelect(event.id)}
               onMouseEnter={() => setHovered(event.id)}
               onMouseLeave={() => setHovered(null)}
@@ -81,8 +82,7 @@ export default function EventSelector({ selectedEvent, onSelect }) {
                   selected || isHovered ? COLORS.textPrimary : COLORS.border
                 }`,
                 borderRadius: 2,
-                padding: '16px 18px',
-                transition: 'border-color 0.15s ease',
+                padding: '20px 22px',
                 fontFamily: FONTS.sans,
               }}
             >

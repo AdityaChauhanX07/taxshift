@@ -248,6 +248,7 @@ export default function InputForm({ eventId, formData, onChange, onCalculate, on
       style={{
         background: COLORS.card,
         border: `1px solid ${COLORS.border}`,
+        borderTop: `2px solid ${COLORS.accent}`,
         borderRadius: 2,
         padding: isMobile ? 16 : 28,
       }}
@@ -265,7 +266,21 @@ export default function InputForm({ eventId, formData, onChange, onCalculate, on
       </h2>
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'flex-end' }}>
-        {fields.map(renderField)}
+        {fields.flatMap((field) => {
+          const el = renderField(field)
+          // For longer forms, divide the common fields from the event-specific
+          // ones with a thin full-width rule after the state selector.
+          if (fields.length >= 5 && field.key === 'state') {
+            return [
+              el,
+              <div
+                key={`${field.key}-divider`}
+                style={{ flexBasis: '100%', height: 1, background: COLORS.border, margin: '4px 0' }}
+              />,
+            ]
+          }
+          return [el]
+        })}
       </div>
 
       {errors.length > 0 && (

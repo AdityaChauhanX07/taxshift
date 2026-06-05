@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import {
   ResponsiveContainer,
   BarChart,
@@ -8,9 +9,42 @@ import {
   ReferenceLine,
   Tooltip,
 } from 'recharts'
-import { COLORS, FONTS, labelStyle } from '../utils/theme.js'
+import { FONTS, labelStyle } from '../utils/theme.js'
 import { formatCurrency, formatPercent } from '../utils/formatters.js'
 import { useMediaQuery } from '../utils/useMediaQuery.js'
+
+/**
+ * Dark-theme palette scoped to the results section. The rest of the app stays
+ * on the light cream palette in theme.js; these tokens only apply once results
+ * are revealed, to make that reveal feel like a deliberate section break.
+ */
+const DARK = {
+  wrapperBg: '#1A1A1A',
+  savings: '#34D399', // bright mint — pops on dark
+  cost: '#F87171', // bright coral — pops on dark
+  heroSuffix: '#A1A09A',
+  muted: '#9B9790',
+  amount: '#F5F3ED', // cream, used as light text
+  rate: '#7A7770',
+  arrow: '#6B6560',
+  cardBg: '#252525',
+  cardBorder: '#333333',
+  sectionLabel: '#7A7770',
+  axisTick: '#A1A09A',
+  refLine: '#444444',
+  tooltipBg: '#333333',
+  tooltipText: '#F5F3ED',
+  tooltipBorder: '#444444',
+  noteBg: '#2A2520',
+  noteBorder: '#4A4030',
+  noteText: '#D4A84A',
+  analysisBg: '#222222',
+  analysisBorder: '#333333',
+  analysisAccent: '#CA8A04', // amber accent works as-is on dark
+  insightText: '#D4D3CD',
+  btnBorder: '#444444',
+  btnText: '#A1A09A',
+}
 
 /** Custom chart tooltip showing "Saves $X" / "Costs $X" in mono. */
 function ChartTooltip({ active, payload }) {
@@ -21,8 +55,9 @@ function ChartTooltip({ active, payload }) {
   return (
     <div
       style={{
-        background: COLORS.textPrimary,
-        color: COLORS.bg,
+        background: DARK.tooltipBg,
+        color: DARK.tooltipText,
+        border: `1px solid ${DARK.tooltipBorder}`,
         fontFamily: FONTS.mono,
         fontSize: 12,
         borderRadius: 2,
@@ -37,18 +72,18 @@ function ChartTooltip({ active, payload }) {
 }
 
 /** A single BEFORE/AFTER column: label, total, and effective rate. */
-function Column({ tag, scenario, totalIncome }) {
+function Column({ tag, scenario, totalIncome, accent }) {
   return (
-    <div style={{ flex: 1 }}>
-      <div style={{ ...labelStyle, fontSize: 13, marginBottom: 8 }}>{tag}</div>
-      <div style={{ fontFamily: FONTS.mono, fontSize: 22, color: COLORS.textPrimary }}>
+    <div style={{ flex: 1, borderLeft: `3px solid ${accent}`, paddingLeft: 14 }}>
+      <div style={{ ...labelStyle, fontSize: 13, color: DARK.muted, marginBottom: 8 }}>{tag}</div>
+      <div style={{ fontFamily: FONTS.mono, fontSize: 22, color: DARK.amount }}>
         {formatCurrency(scenario.total)}
       </div>
       <div
         style={{
           fontFamily: FONTS.sans,
           fontSize: 13,
-          color: COLORS.textSecondary,
+          color: DARK.rate,
           marginTop: 4,
         }}
       >
@@ -74,14 +109,48 @@ export default function ResultsDashboard({ results, totalIncome, aiEnhancing, on
 
   const saves = delta > 0
   const costs = delta < 0
-  const heroColor = saves ? COLORS.savings : costs ? COLORS.cost : COLORS.textPrimary
+  const heroColor = saves ? DARK.savings : costs ? DARK.cost : DARK.amount
   const heroLabel = saves ? '/ year saved' : costs ? '/ year more tax' : '/ year - no change'
+
+  // Count the hero number up from $0 to the final delta over ~600ms (30 frames
+  // at 50ms) for a "calculator" feel. The component is re-keyed per calculation
+  // in App, so it remounts with animatedDelta back at 0 and restarts cleanly.
+  const [animatedDelta, setAnimatedDelta] = useState(0)
+  useEffect(() => {
+    const frames = 30
+    const step = delta / frames
+    let current = 0
+    let frame = 0
+    const id = setInterval(() => {
+      frame += 1
+      current += step
+      if (frame >= frames) {
+        setAnimatedDelta(delta)
+        clearInterval(id)
+      } else {
+        setAnimatedDelta(Math.round(current))
+      }
+    }, 50)
+    return () => clearInterval(id)
+  }, [delta])
+
+  const monthly = Math.round(Math.abs(delta) / 12)
 
   const chartData = breakdown.filter((d) => d.value !== 0 && d.type !== 'absolute')
   const chartHeight = Math.max(120, chartData.length * 46 + 30)
 
   return (
-    <section>
+    <section
+      style={{
+        background: DARK.wrapperBg,
+        borderRadius: 6,
+        padding: isMobile ? '32px 24px' : '48px 40px',
+        // Pull out to the container's content edges so the dark block reads as a
+        // full section break rather than a card inside the page.
+        marginLeft: isMobile ? -16 : -20,
+        marginRight: isMobile ? -16 : -20,
+      }}
+    >
       {/* a) Hero delta */}
       <div
         style={{
@@ -93,9 +162,23 @@ export default function ResultsDashboard({ results, totalIncome, aiEnhancing, on
           letterSpacing: '-0.5px',
         }}
       >
-        {formatCurrency(Math.abs(delta))}{' '}
-        <span style={{ fontSize: 20, fontWeight: 400 }}>{heroLabel}</span>
+        {formatCurrency(Math.abs(animatedDelta))}{' '}
+        <span style={{ fontSize: 20, fontWeight: 400, color: DARK.heroSuffix }}>{heroLabel}</span>
       </div>
+
+      {/* Monthly equivalent of the annual delta */}
+      {delta !== 0 && (
+        <div
+          style={{
+            fontFamily: FONTS.sans,
+            fontSize: 14,
+            color: DARK.muted,
+            marginTop: 8,
+          }}
+        >
+          That's about {formatCurrency(monthly)}/month
+        </div>
+      )}
 
       {/* b) Before → After */}
       <div
@@ -105,24 +188,36 @@ export default function ResultsDashboard({ results, totalIncome, aiEnhancing, on
           alignItems: isMobile ? 'stretch' : 'center',
           gap: isMobile ? 16 : 24,
           marginTop: 28,
-          background: COLORS.card,
-          border: `1px solid ${COLORS.border}`,
-          borderRadius: 2,
-          padding: isMobile ? '16px' : '20px 24px',
+          background: DARK.cardBg,
+          border: `1px solid ${DARK.cardBorder}`,
+          borderRadius: 4,
+          padding: 24,
         }}
       >
-        <Column tag="BEFORE" scenario={before} totalIncome={totalIncome} />
+        <Column tag="BEFORE" scenario={before} totalIncome={totalIncome} accent={DARK.cost} />
         {!isMobile && (
-          <div style={{ fontSize: 24, color: COLORS.textSecondary, fontFamily: FONTS.sans }}>→</div>
+          <div style={{ fontSize: 24, color: DARK.arrow, fontFamily: FONTS.sans }}>→</div>
         )}
-        <Column tag="AFTER" scenario={after} totalIncome={totalIncome} />
+        <Column tag="AFTER" scenario={after} totalIncome={totalIncome} accent={DARK.savings} />
       </div>
 
       {/* c) Breakdown chart */}
       {chartData.length > 0 && (
         <div style={{ marginTop: 32 }}>
-          <div style={{ ...labelStyle, marginBottom: 14 }}>Where the change comes from</div>
-          <div style={{ width: '100%', height: chartHeight }}>
+          <div style={{ ...labelStyle, color: DARK.sectionLabel, marginBottom: 14 }}>
+            Where the change comes from
+          </div>
+          <div
+            style={{
+              width: '100%',
+              height: chartHeight,
+              background: DARK.cardBg,
+              border: `1px solid ${DARK.cardBorder}`,
+              borderRadius: 4,
+              padding: 20,
+              boxSizing: 'border-box',
+            }}
+          >
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={chartData}
@@ -136,13 +231,13 @@ export default function ResultsDashboard({ results, totalIncome, aiEnhancing, on
                   width={180}
                   tickLine={false}
                   axisLine={false}
-                  tick={{ fontFamily: FONTS.sans, fontSize: 11, fill: COLORS.textSecondary }}
+                  tick={{ fontFamily: FONTS.sans, fontSize: 11, fill: DARK.axisTick }}
                 />
-                <ReferenceLine x={0} stroke={COLORS.textPrimary} strokeWidth={1} />
-                <Tooltip cursor={{ fill: 'rgba(0,0,0,0.04)' }} content={<ChartTooltip />} />
+                <ReferenceLine x={0} stroke={DARK.refLine} strokeWidth={1} />
+                <Tooltip cursor={{ fill: 'rgba(255,255,255,0.06)' }} content={<ChartTooltip />} />
                 <Bar dataKey="value" radius={1} barSize={20} isAnimationActive={false}>
                   {chartData.map((d, i) => (
-                    <Cell key={i} fill={d.value >= 0 ? COLORS.savings : COLORS.cost} />
+                    <Cell key={i} fill={d.value >= 0 ? DARK.savings : DARK.cost} />
                   ))}
                 </Bar>
               </BarChart>
@@ -156,14 +251,14 @@ export default function ResultsDashboard({ results, totalIncome, aiEnhancing, on
         <div
           style={{
             marginTop: 28,
-            background: COLORS.noteBg,
-            border: `1px solid ${COLORS.noteBorder}`,
+            background: DARK.noteBg,
+            border: `1px solid ${DARK.noteBorder}`,
             borderRadius: 2,
             padding: '12px 16px',
             fontFamily: FONTS.sans,
             fontSize: 13,
             lineHeight: 1.6,
-            color: COLORS.noteText,
+            color: DARK.noteText,
           }}
         >
           {note}
@@ -175,20 +270,20 @@ export default function ResultsDashboard({ results, totalIncome, aiEnhancing, on
         <div
           style={{
             marginTop: 28,
-            background: COLORS.inputBg,
-            border: `1px solid ${COLORS.panelBorder}`,
-            borderLeft: `3px solid ${COLORS.accent}`,
+            background: DARK.analysisBg,
+            border: `1px solid ${DARK.analysisBorder}`,
+            borderLeft: `3px solid ${DARK.analysisAccent}`,
             borderRadius: 2,
             padding: '18px 20px',
           }}
         >
-          <div style={{ ...labelStyle, marginBottom: 10 }}>Analysis</div>
+          <div style={{ ...labelStyle, color: DARK.sectionLabel, marginBottom: 10 }}>Analysis</div>
           <p
             style={{
               fontFamily: FONTS.sans,
               fontSize: isMobile ? 13.5 : 14.5,
               lineHeight: 1.7,
-              color: COLORS.textPrimary,
+              color: DARK.insightText,
               margin: 0,
             }}
           >
@@ -204,7 +299,7 @@ export default function ResultsDashboard({ results, totalIncome, aiEnhancing, on
             marginTop: 12,
             fontFamily: FONTS.sans,
             fontSize: 12,
-            color: COLORS.tagMuted,
+            color: DARK.sectionLabel,
           }}
         >
           ✦ Enhancing with AI…
@@ -215,16 +310,16 @@ export default function ResultsDashboard({ results, totalIncome, aiEnhancing, on
       <button
         type="button"
         onClick={onTryAnother}
-        className="ts-btn-secondary"
+        className="ts-btn-dark"
         style={{
           marginTop: 32,
           cursor: 'pointer',
           fontFamily: FONTS.sans,
           fontSize: 14,
           fontWeight: 500,
-          color: COLORS.textSecondary,
+          color: DARK.btnText,
           background: 'transparent',
-          border: `1px solid ${COLORS.border}`,
+          border: `1px solid ${DARK.btnBorder}`,
           borderRadius: 2,
           padding: '11px 22px',
         }}

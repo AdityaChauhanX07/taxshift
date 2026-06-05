@@ -17,6 +17,8 @@ export const COLORS = {
   selectedText: '#F5F3ED',
   selectedDesc: '#B0ADA5',
   disclaimerBg: '#EDEBE5',
+  resultsBg: '#EFEEE8',
+  chartBg: '#FAFAF7',
   errorBg: '#FEF2F2',
   errorBorder: '#E8BFBF',
   noteBg: '#FFFBEB',

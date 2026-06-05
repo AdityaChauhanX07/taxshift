@@ -7,6 +7,8 @@ import { calculateLifeEvent } from './engine/lifeEvents.js'
 import { generateFallbackInsight } from './ai/fallbackTemplates.js'
 import { fetchAIInsight } from './ai/apiClient.js'
 import Disclaimer from './components/Disclaimer.jsx'
+import HeroPreview from './components/HeroPreview.jsx'
+import HowItWorks from './components/HowItWorks.jsx'
 import EventSelector from './components/EventSelector.jsx'
 import InputForm, { EVENT_FIELDS } from './components/InputForm.jsx'
 import ResultsDashboard from './components/ResultsDashboard.jsx'
@@ -103,6 +105,9 @@ export default function App() {
   const [results, setResults] = useState(null)
   const [errors, setErrors] = useState([])
   const [aiLoading, setAiLoading] = useState(false)
+  // Increments once per completed calculation; drives the results scroll and
+  // re-keys the dashboard so the count-up animation restarts cleanly.
+  const [calcId, setCalcId] = useState(0)
 
   const formRef = useRef(null)
   const resultsRef = useRef(null)
@@ -116,12 +121,16 @@ export default function App() {
     }
   }, [selectedEvent, results])
 
-  // Smooth-scroll to results once they're computed.
+  // Smooth-scroll once per calculation so the hero number lands roughly in the
+  // upper-center of the viewport (the first thing visible after calculating).
+  // Keyed on calcId, not results, so a late AI insight update doesn't re-scroll.
   useEffect(() => {
-    if (results && resultsRef.current) {
-      resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    if (calcId > 0 && resultsRef.current) {
+      const top =
+        resultsRef.current.getBoundingClientRect().top + window.scrollY - window.innerHeight * 0.3
+      window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' })
     }
-  }, [results])
+  }, [calcId])
 
   const handleSelect = (id) => {
     aiRequestRef.current += 1 // cancel any in-flight AI enhancement
@@ -176,6 +185,7 @@ export default function App() {
     // version in the background. If the call fails or times out, the fallback
     // simply stays.
     setResults({ ...calc, insight })
+    setCalcId((c) => c + 1)
 
     const requestId = ++aiRequestRef.current
     setAiLoading(true)
@@ -192,16 +202,24 @@ export default function App() {
   const isMobile = useMediaQuery('(max-width: 639px)')
 
   return (
-    <div style={{ minHeight: '100vh', background: COLORS.bg, color: COLORS.textPrimary }}>
+    <div
+      style={{
+        minHeight: '100vh',
+        background: COLORS.bg,
+        backgroundImage: 'radial-gradient(circle, #D6D3CB 0.5px, transparent 0.5px)',
+        backgroundSize: '24px 24px',
+        color: COLORS.textPrimary,
+      }}
+    >
       <div
         style={{
           maxWidth: 800,
           margin: '0 auto',
-          padding: isMobile ? '28px 16px 48px' : '36px 20px 56px',
+          padding: isMobile ? '0 16px 48px' : '0 20px 56px',
         }}
       >
         {/* Header */}
-        <header>
+        <header style={{ padding: isMobile ? '40px 0 20px' : '56px 0 24px' }}>
           <div
             style={{
               display: 'inline-block',
@@ -209,7 +227,7 @@ export default function App() {
               paddingBottom: 4,
             }}
           >
-            <span style={{ fontFamily: FONTS.serif, fontSize: 36, lineHeight: 1 }}>
+            <span style={{ fontFamily: FONTS.serif, fontSize: isMobile ? 36 : 48, lineHeight: 1 }}>
               Tax<span style={{ fontStyle: 'italic' }}>Shift</span>
             </span>
           </div>
@@ -218,15 +236,33 @@ export default function App() {
               fontFamily: FONTS.sans,
               fontSize: 14,
               color: COLORS.textSecondary,
-              margin: '12px 0 0',
+              margin: '14px 0 0',
             }}
           >
             See how your next life event changes your taxes - before it happens
           </p>
+          <p
+            style={{
+              fontFamily: FONTS.serif,
+              fontStyle: 'italic',
+              fontSize: 13,
+              color: COLORS.tagMuted,
+              margin: '6px 0 0',
+              maxWidth: 520,
+            }}
+          >
+            Americans make 4-5 major financial decisions per decade without knowing the tax impact.
+          </p>
         </header>
 
-        <div style={{ marginTop: 18 }}>
+        <HeroPreview />
+
+        <div>
           <Disclaimer />
+        </div>
+
+        <div style={{ marginTop: 28 }}>
+          <HowItWorks />
         </div>
 
         <div style={{ marginTop: 32 }}>
@@ -254,8 +290,9 @@ export default function App() {
         {results && (
           <div
             ref={resultsRef}
+            key={calcId}
             className="ts-fade-in"
-            style={{ marginTop: 40, scrollMarginTop: 24 }}
+            style={{ marginTop: 36, scrollMarginTop: 24 }}
           >
             <ResultsDashboard
               results={results}
@@ -279,11 +316,21 @@ export default function App() {
             style={{
               fontFamily: FONTS.sans,
               fontSize: 12,
-              color: COLORS.tagMuted,
+              color: COLORS.textSecondary,
               margin: 0,
             }}
           >
-            TaxShift - DSOC Summer Edition 2026 · Tax, Compliance &amp; Regulatory Innovation
+            Built for DSOC Summer Edition 2026 · Tax, Compliance &amp; Regulatory Innovation
+          </p>
+          <p
+            style={{
+              fontFamily: FONTS.sans,
+              fontSize: 11,
+              color: COLORS.tagMuted,
+              margin: '8px 0 0',
+            }}
+          >
+            Built with React · Recharts · Gemini · Vercel
           </p>
         </footer>
       </div>
