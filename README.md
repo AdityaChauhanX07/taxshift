@@ -8,7 +8,7 @@ Most people only discover how a major life event affects their taxes *after* it 
 
 ## What It Does
 
-TaxShift is an interactive, forward-looking tax impact simulator. You pick a life event, enter a few numbers, and instantly see a before → after comparison of your estimated federal and state taxes, a breakdown of exactly where the change comes from, and a plain-English explanation of *why* — enhanced by Claude when an API key is configured, with a built-in deterministic fallback so it always works.
+TaxShift is an interactive, forward-looking tax impact simulator. You pick a life event, enter a few numbers, and instantly see a before → after comparison of your estimated federal and state taxes, a breakdown of exactly where the change comes from, and a plain-English explanation of *why* — enhanced by Gemini when an API key is configured, with a built-in deterministic fallback so it always works.
 
 ## Life Events Covered
 
@@ -35,14 +35,14 @@ Built on **2025 federal tax models, including OBBBA updates**:
 
 ## Tech Stack
 
-React 19 · Vite · Recharts · Tailwind CSS · Claude API (via a Vercel serverless proxy)
+React 19 · Vite · Recharts · Tailwind CSS · Gemini API (via a Vercel serverless proxy)
 
 ## Run Locally
 
 ```bash
 git clone https://github.com/AdityaChauhanX/taxshift.git
 cd taxshift
-cp .env.example .env.local   # then add your Claude API key (optional — fallback works without it)
+cp .env.example .env.local   # then add your Gemini API key (optional — fallback works without it)
 npm install
 npm run dev
 ```
@@ -53,9 +53,9 @@ The app runs at the URL Vite prints (default `http://localhost:5173`). The AI in
 
 1. Push the repository to GitHub.
 2. Connect the repo to [Vercel](https://vercel.com) and import it (the included `vercel.json` configures the build and the `/api/insight` serverless function).
-3. In the Vercel project settings, add an environment variable **`CLAUDE_API_KEY`** with your Anthropic API key.
+3. In the Vercel project settings, add an environment variable **`GEMINI_API_KEY`** with your Google Gemini API key.
 
-Vercel builds the static frontend and deploys `api/insight.js` as a serverless function that proxies Claude requests, keeping your API key server-side.
+Vercel builds the static frontend and deploys `api/insight.js` as a serverless function that proxies Gemini requests, keeping your API key server-side.
 
 ## Disclaimer
 

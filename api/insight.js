@@ -1,7 +1,7 @@
-import Anthropic from '@anthropic-ai/sdk'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 
 /**
- * Vercel Node.js serverless function that proxies a Claude API request.
+ * Vercel Node.js serverless function that proxies a Google Gemini request.
  *
  * The system prompt is constructed entirely server-side so it never ships to
  * the browser. The function is intentionally forgiving: on any failure it
@@ -28,7 +28,8 @@ Rules:
 - Do not use bullet points or headers — write in flowing prose`
 
 // eslint-disable-next-line no-undef -- server-side Vercel function; `process` is valid here
-const client = new Anthropic({ apiKey: process.env.CLAUDE_API_KEY })
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
+const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
 
 export default async function handler(req, res) {
   // CORS — permit local dev and preflight.
@@ -71,22 +72,8 @@ Estimated tax after this event: $${after?.total ?? 0}
 Net annual change: ${saves ? 'saves' : 'costs'} $${absDelta} per year
 Key factors: ${factors}`
 
-    const message = await client.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 300,
-      // Short, latency-sensitive content generation: skip thinking and run at
-      // low effort to stay well within the client's 8s budget.
-      thinking: { type: 'disabled' },
-      output_config: { effort: 'low' },
-      system: SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: userMessage }],
-    })
-
-    const text = (message.content || [])
-      .filter((block) => block.type === 'text')
-      .map((block) => block.text)
-      .join('')
-      .trim()
+    const result = await model.generateContent(`${SYSTEM_PROMPT}\n\n${userMessage}`)
+    const text = (result.response.text() || '').trim()
 
     res.status(200).json({ insight: text || null })
   } catch {
