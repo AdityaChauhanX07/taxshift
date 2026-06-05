@@ -84,13 +84,20 @@ export function calculateLifeEvent(eventId, formData = {}) {
     return t
   }
 
-  /** Assemble a rounded scenario object with a consistent total. */
+  /**
+   * Assemble a rounded scenario object with a consistent total.
+   *
+   * Credits are non-refundable here: they can reduce federal liability to $0
+   * but never below it (so the total can be $0 but never negative). We don't
+   * model the refundable Additional Child Tax Credit — the disclaimer covers
+   * that simplification.
+   */
   const scenario = (federal, state, credits = 0, seTax = 0) => {
     const f = Math.round(federal)
     const s = Math.round(state)
     const c = Math.round(credits)
     const se = Math.round(seTax)
-    return { federal: f, state: s, credits: c, seTax: se, total: f - c + s + se }
+    return { federal: f, state: s, credits: c, seTax: se, total: Math.max(0, f - c) + s + se }
   }
 
   let before
