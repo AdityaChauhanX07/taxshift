@@ -10,6 +10,7 @@ import {
 } from 'recharts'
 import { COLORS, FONTS, labelStyle } from '../utils/theme.js'
 import { formatCurrency, formatPercent } from '../utils/formatters.js'
+import { useMediaQuery } from '../utils/useMediaQuery.js'
 
 /** Custom chart tooltip showing "Saves $X" / "Costs $X" in mono. */
 function ChartTooltip({ active, payload }) {
@@ -69,11 +70,11 @@ function Column({ tag, scenario, totalIncome }) {
  */
 export default function ResultsDashboard({ results, totalIncome, aiEnhancing, onTryAnother }) {
   const { before, after, delta, breakdown = [], note, insight } = results
+  const isMobile = useMediaQuery('(max-width: 639px)')
 
   const saves = delta > 0
   const costs = delta < 0
-  const heroColor = saves ? COLORS.savings : costs ? COLORS.cost : COLORS.textSecondary
-  const sign = saves ? '−' : costs ? '+' : ''
+  const heroColor = saves ? COLORS.savings : costs ? COLORS.cost : COLORS.textPrimary
   const heroLabel = saves ? '/ year saved' : costs ? '/ year more tax' : '/ year — no change'
 
   const chartData = breakdown.filter((d) => d.value !== 0 && d.type !== 'absolute')
@@ -85,14 +86,13 @@ export default function ResultsDashboard({ results, totalIncome, aiEnhancing, on
       <div
         style={{
           fontFamily: FONTS.mono,
-          fontSize: 48,
+          fontSize: isMobile ? 32 : 48,
           fontWeight: 700,
           color: heroColor,
           lineHeight: 1.1,
           letterSpacing: '-0.5px',
         }}
       >
-        {sign}
         {formatCurrency(Math.abs(delta))}{' '}
         <span style={{ fontSize: 20, fontWeight: 400 }}>{heroLabel}</span>
       </div>
@@ -101,17 +101,20 @@ export default function ResultsDashboard({ results, totalIncome, aiEnhancing, on
       <div
         style={{
           display: 'flex',
-          alignItems: 'center',
-          gap: 24,
+          flexDirection: isMobile ? 'column' : 'row',
+          alignItems: isMobile ? 'stretch' : 'center',
+          gap: isMobile ? 16 : 24,
           marginTop: 28,
           background: COLORS.card,
           border: `1px solid ${COLORS.border}`,
           borderRadius: 2,
-          padding: '20px 24px',
+          padding: isMobile ? '16px' : '20px 24px',
         }}
       >
         <Column tag="BEFORE" scenario={before} totalIncome={totalIncome} />
-        <div style={{ fontSize: 24, color: COLORS.textSecondary, fontFamily: FONTS.sans }}>→</div>
+        {!isMobile && (
+          <div style={{ fontSize: 24, color: COLORS.textSecondary, fontFamily: FONTS.sans }}>→</div>
+        )}
         <Column tag="AFTER" scenario={after} totalIncome={totalIncome} />
       </div>
 
@@ -183,7 +186,7 @@ export default function ResultsDashboard({ results, totalIncome, aiEnhancing, on
           <p
             style={{
               fontFamily: FONTS.sans,
-              fontSize: 14.5,
+              fontSize: isMobile ? 13.5 : 14.5,
               lineHeight: 1.7,
               color: COLORS.textPrimary,
               margin: 0,
@@ -212,6 +215,7 @@ export default function ResultsDashboard({ results, totalIncome, aiEnhancing, on
       <button
         type="button"
         onClick={onTryAnother}
+        className="ts-btn-secondary"
         style={{
           marginTop: 32,
           cursor: 'pointer',

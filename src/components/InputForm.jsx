@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { COLORS, FONTS } from '../utils/theme.js'
+import { useMediaQuery } from '../utils/useMediaQuery.js'
 import { ALL_STATES } from '../data/stateTaxData.js'
 import { EVENTS } from './EventSelector.jsx'
 
@@ -102,6 +103,7 @@ const labelAbove = {
  */
 export default function InputForm({ eventId, formData, onChange, onCalculate, onReset, errors = [] }) {
   const [focusedKey, setFocusedKey] = useState(null)
+  const isMobile = useMediaQuery('(max-width: 639px)')
   const fields = EVENT_FIELDS[eventId] || []
   const title = EVENTS.find((e) => e.id === eventId)?.title || 'Your numbers'
 
@@ -185,7 +187,7 @@ export default function InputForm({ eventId, formData, onChange, onCalculate, on
     const small = kind === 'small'
 
     return (
-      <div key={key} style={{ flexBasis: small ? 120 : '100%' }}>
+      <div key={key} style={{ flexBasis: small && !isMobile ? 120 : '100%' }}>
         <label style={labelAbove}>{label}</label>
         <div style={{ position: 'relative' }}>
           {isCurrency && (
@@ -246,7 +248,7 @@ export default function InputForm({ eventId, formData, onChange, onCalculate, on
         background: COLORS.card,
         border: `1px solid ${COLORS.border}`,
         borderRadius: 2,
-        padding: 28,
+        padding: isMobile ? 16 : 28,
       }}
     >
       <h2
@@ -295,6 +297,7 @@ export default function InputForm({ eventId, formData, onChange, onCalculate, on
         <button
           type="button"
           onClick={onCalculate}
+          className="ts-btn-primary"
           style={{
             cursor: 'pointer',
             fontFamily: FONTS.sans,
@@ -312,6 +315,7 @@ export default function InputForm({ eventId, formData, onChange, onCalculate, on
         <button
           type="button"
           onClick={onReset}
+          className="ts-btn-secondary"
           style={{
             cursor: 'pointer',
             fontFamily: FONTS.sans,

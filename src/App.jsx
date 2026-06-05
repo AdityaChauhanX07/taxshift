@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { COLORS, FONTS } from './utils/theme.js'
+import { useMediaQuery } from './utils/useMediaQuery.js'
 import { parseNumericInput } from './utils/formatters.js'
 import { validateField } from './utils/validation.js'
 import { calculateLifeEvent } from './engine/lifeEvents.js'
@@ -188,10 +189,17 @@ export default function App() {
   }
 
   const totalIncome = selectedEvent ? computeTotalIncome(selectedEvent, formData) : 0
+  const isMobile = useMediaQuery('(max-width: 639px)')
 
   return (
     <div style={{ minHeight: '100vh', background: COLORS.bg, color: COLORS.textPrimary }}>
-      <div style={{ maxWidth: 800, margin: '0 auto', padding: '36px 20px 56px' }}>
+      <div
+        style={{
+          maxWidth: 800,
+          margin: '0 auto',
+          padding: isMobile ? '28px 16px 48px' : '36px 20px 56px',
+        }}
+      >
         {/* Header */}
         <header>
           <div
@@ -226,7 +234,12 @@ export default function App() {
         </div>
 
         {selectedEvent && (
-          <div ref={formRef} style={{ marginTop: 36, scrollMarginTop: 24 }}>
+          <div
+            ref={formRef}
+            key={selectedEvent}
+            className="ts-fade-in"
+            style={{ marginTop: 36, scrollMarginTop: 24 }}
+          >
             <InputForm
               eventId={selectedEvent}
               formData={formData}
@@ -239,7 +252,11 @@ export default function App() {
         )}
 
         {results && (
-          <div ref={resultsRef} style={{ marginTop: 40, scrollMarginTop: 24 }}>
+          <div
+            ref={resultsRef}
+            className="ts-fade-in"
+            style={{ marginTop: 40, scrollMarginTop: 24 }}
+          >
             <ResultsDashboard
               results={results}
               eventId={selectedEvent}
@@ -253,16 +270,16 @@ export default function App() {
         {/* Footer */}
         <footer
           style={{
-            marginTop: 64,
-            paddingTop: 16,
+            marginTop: 56,
             borderTop: `1px solid ${COLORS.border}`,
+            padding: '20px 0 40px',
           }}
         >
           <p
             style={{
               fontFamily: FONTS.sans,
               fontSize: 12,
-              color: COLORS.textSecondary,
+              color: COLORS.tagMuted,
               margin: 0,
             }}
           >

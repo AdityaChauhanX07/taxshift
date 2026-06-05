@@ -59,13 +59,7 @@ export default function EventSelector({ selectedEvent, onSelect }) {
         What's changing?
       </h2>
 
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(2, 1fr)',
-          gap: 12,
-        }}
-      >
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {EVENTS.map((event, i) => {
           const selected = selectedEvent === event.id
           const isHovered = hovered === event.id && !selected
