@@ -4,6 +4,7 @@ import { parseNumericInput } from './utils/formatters.js'
 import { validateField } from './utils/validation.js'
 import { calculateLifeEvent } from './engine/lifeEvents.js'
 import { generateFallbackInsight } from './ai/fallbackTemplates.js'
+import { fetchAIInsight } from './ai/apiClient.js'
 import Disclaimer from './components/Disclaimer.jsx'
 import EventSelector from './components/EventSelector.jsx'
 import InputForm, { EVENT_FIELDS } from './components/InputForm.jsx'
@@ -100,9 +101,12 @@ export default function App() {
   const [formData, setFormData] = useState({})
   const [results, setResults] = useState(null)
   const [errors, setErrors] = useState([])
+  const [aiLoading, setAiLoading] = useState(false)
 
   const formRef = useRef(null)
   const resultsRef = useRef(null)
+  // Monotonic token so a stale in-flight AI response can't clobber newer state.
+  const aiRequestRef = useRef(0)
 
   // Smooth-scroll the form into view when an event is first selected.
   useEffect(() => {
@@ -119,6 +123,8 @@ export default function App() {
   }, [results])
 
   const handleSelect = (id) => {
+    aiRequestRef.current += 1 // cancel any in-flight AI enhancement
+    setAiLoading(false)
     setSelectedEvent(id)
     setFormData(defaultsFor(id))
     setResults(null)
@@ -130,6 +136,8 @@ export default function App() {
   }
 
   const handleReset = () => {
+    aiRequestRef.current += 1 // cancel any in-flight AI enhancement
+    setAiLoading(false)
     setSelectedEvent(null)
     setFormData({})
     setResults(null)
@@ -151,6 +159,8 @@ export default function App() {
     }
 
     if (found.length > 0) {
+      aiRequestRef.current += 1 // cancel any in-flight AI enhancement
+      setAiLoading(false)
       setErrors(found)
       setResults(null)
       return
@@ -160,7 +170,21 @@ export default function App() {
     const engineInput = mapFormToEngine(selectedEvent, formData)
     const calc = calculateLifeEvent(selectedEvent, engineInput)
     const insight = generateFallbackInsight(selectedEvent, calc, engineInput)
+
+    // Show the fallback insight instantly, then try to replace it with the AI
+    // version in the background. If the call fails or times out, the fallback
+    // simply stays.
     setResults({ ...calc, insight })
+
+    const requestId = ++aiRequestRef.current
+    setAiLoading(true)
+    fetchAIInsight(selectedEvent, engineInput, calc).then((aiInsight) => {
+      if (aiRequestRef.current !== requestId) return // a newer request superseded this one
+      if (aiInsight) {
+        setResults((prev) => (prev ? { ...prev, insight: aiInsight } : prev))
+      }
+      setAiLoading(false)
+    })
   }
 
   const totalIncome = selectedEvent ? computeTotalIncome(selectedEvent, formData) : 0
@@ -220,6 +244,7 @@ export default function App() {
               results={results}
               eventId={selectedEvent}
               totalIncome={totalIncome}
+              aiEnhancing={aiLoading}
               onTryAnother={handleReset}
             />
           </div>

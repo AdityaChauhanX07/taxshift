@@ -67,7 +67,7 @@ function Column({ tag, scenario, totalIncome }) {
  *   onTryAnother: () => void,
  * }} props
  */
-export default function ResultsDashboard({ results, totalIncome, onTryAnother }) {
+export default function ResultsDashboard({ results, totalIncome, aiEnhancing, onTryAnother }) {
   const { before, after, delta, breakdown = [], note, insight } = results
 
   const saves = delta > 0
@@ -191,6 +191,20 @@ export default function ResultsDashboard({ results, totalIncome, onTryAnother })
           >
             {insight}
           </p>
+        </div>
+      )}
+
+      {/* Subtle AI-enhancement indicator, shown only while the call is in flight */}
+      {aiEnhancing && (
+        <div
+          style={{
+            marginTop: 12,
+            fontFamily: FONTS.sans,
+            fontSize: 12,
+            color: COLORS.tagMuted,
+          }}
+        >
+          ✦ Enhancing with AI…
         </div>
       )}
 
