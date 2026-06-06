@@ -213,6 +213,24 @@ export default function App() {
     backgroundSize: '24px 24px',
   }
 
+  // Decorative full-width gradient spacers that blend one section's background
+  // into the next, replacing the hard borders between bands. Purely visual.
+  const CREAM = COLORS.bg
+  const WHITE = COLORS.card
+  const DARK = '#1A1A1A'
+  const fade = (from, to, tall = true) => (
+    <div
+      aria-hidden="true"
+      style={{
+        height: tall ? (isMobile ? 28 : 40) : isMobile ? 28 : 32,
+        background: `linear-gradient(to bottom, ${from}, ${to})`,
+        margin: 0,
+        padding: 0,
+        pointerEvents: 'none',
+      }}
+    />
+  )
+
   return (
     <div style={{ minHeight: '100vh', background: COLORS.bg, color: COLORS.textPrimary }}>
       {/* SECTION 1 — Hero: cream + dot grid */}
@@ -270,18 +288,17 @@ export default function App() {
         </div>
       </div>
 
+      {/* Transition: hero cream → credibility dark */}
+      {fade(CREAM, DARK)}
+
       {/* CREDIBILITY STRIP — compact dark data bar bridging hero and selection */}
       <CredibilityStrip />
 
-      {/* SECTION 2 — Selection: clean white stage, faintly bordered, no dots */}
-      <div
-        style={{
-          background: COLORS.card,
-          borderTop: `1px solid ${COLORS.disclaimerBg}`,
-          borderBottom: `1px solid ${COLORS.disclaimerBg}`,
-          marginBottom: 8,
-        }}
-      >
+      {/* Transition: credibility dark → selection white */}
+      {fade(DARK, WHITE)}
+
+      {/* SECTION 2 — Selection: clean white stage, no dots */}
+      <div style={{ background: COLORS.card }}>
         <div
           style={{
             ...innerContainer,
@@ -295,6 +312,9 @@ export default function App() {
           <CoverageSection />
         </div>
       </div>
+
+      {/* Transition: selection white → cream (form when selected, else footer) */}
+      {fade(WHITE, CREAM, false)}
 
       {/* SECTION 3 — Form: back to warm cream + dot grid */}
       {selectedEvent && (
@@ -321,6 +341,9 @@ export default function App() {
         </div>
       )}
 
+      {/* Transition: form cream → results dark */}
+      {results && fade(CREAM, DARK)}
+
       {/* SECTION 4 — Results: dramatic full-width dark band */}
       {results && (
         <div style={{ background: '#1A1A1A' }}>
@@ -344,6 +367,9 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* Transition: results dark → footer cream */}
+      {results && fade(DARK, CREAM)}
 
       {/* SECTION 5 — Footer: cream */}
       <div style={{ background: COLORS.bg }}>
