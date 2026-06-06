@@ -215,43 +215,50 @@ export default function App() {
     <div style={{ minHeight: '100vh', background: COLORS.bg, color: COLORS.textPrimary }}>
       {/* SECTION 1 — Hero: cream + dot grid */}
       <div style={{ background: COLORS.bg, ...dotGrid }}>
-        <div style={{ ...innerContainer, padding: `0 ${hPad}px ${isMobile ? 24 : 32}px` }}>
-          <header style={{ padding: isMobile ? '40px 0 20px' : '56px 0 24px' }}>
+        <div
+          style={{
+            ...innerContainer,
+            padding: isMobile ? `40px ${hPad}px 48px` : `64px ${hPad}px 48px`,
+          }}
+        >
+          <header>
             <div
               style={{
                 display: 'inline-block',
                 borderBottom: `2px solid ${COLORS.textPrimary}`,
                 paddingBottom: 4,
+                marginBottom: 16,
               }}
             >
               <span
-                style={{ fontFamily: FONTS.serif, fontSize: isMobile ? 36 : 48, lineHeight: 1 }}
+                style={{ fontFamily: FONTS.serif, fontSize: isMobile ? 44 : 64, lineHeight: 1 }}
               >
                 Tax<span style={{ fontStyle: 'italic' }}>Shift</span>
               </span>
             </div>
+            <h1
+              style={{
+                fontFamily: FONTS.serif,
+                fontSize: 30,
+                fontWeight: 400,
+                lineHeight: 1.3,
+                color: COLORS.textPrimary,
+                margin: 0,
+              }}
+            >
+              See how your next life event
+              <br />
+              changes your taxes.
+            </h1>
             <p
               style={{
                 fontFamily: FONTS.sans,
-                fontSize: 14,
+                fontSize: 15,
                 color: COLORS.textSecondary,
-                margin: '14px 0 0',
+                margin: '12px 0 0',
               }}
             >
-              See how your next life event changes your taxes - before it happens
-            </p>
-            <p
-              style={{
-                fontFamily: FONTS.serif,
-                fontStyle: 'italic',
-                fontSize: 13,
-                color: COLORS.tagMuted,
-                margin: '6px 0 0',
-                maxWidth: 520,
-              }}
-            >
-              Americans make 4-5 major financial decisions per decade without knowing the tax
-              impact.
+              Forward-looking tax estimates for life's biggest financial decisions
             </p>
           </header>
 

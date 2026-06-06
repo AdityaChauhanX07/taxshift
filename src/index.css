@@ -22,12 +22,12 @@ body {
   animation: ts-fade-in 200ms ease both;
 }
 
-/* Hero preview card: fade in with a slight upward slide, 1s after load. The
+/* Hero preview panel: fade in with a slight upward slide, 600ms after load. The
    `both` fill mode keeps it hidden during the delay. */
 @keyframes ts-rise-in {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
@@ -36,7 +36,7 @@ body {
 }
 
 .ts-hero-preview {
-  animation: ts-rise-in 500ms ease 1s both;
+  animation: ts-rise-in 600ms ease 600ms both;
 }
 
 /* Button hover states. Kept here so the transitions are pure CSS; the
