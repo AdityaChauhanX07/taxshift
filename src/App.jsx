@@ -8,6 +8,7 @@ import { generateFallbackInsight } from './ai/fallbackTemplates.js'
 import { fetchAIInsight } from './ai/apiClient.js'
 import Disclaimer from './components/Disclaimer.jsx'
 import HeroPreview from './components/HeroPreview.jsx'
+import CredibilityStrip from './components/CredibilityStrip.jsx'
 import HowItWorks from './components/HowItWorks.jsx'
 import EventSelector from './components/EventSelector.jsx'
 import InputForm, { EVENT_FIELDS } from './components/InputForm.jsx'
@@ -267,6 +268,9 @@ export default function App() {
           <Disclaimer />
         </div>
       </div>
+
+      {/* CREDIBILITY STRIP — compact dark data bar bridging hero and selection */}
+      <CredibilityStrip />
 
       {/* SECTION 2 — Selection: clean white stage, faintly bordered, no dots */}
       <div

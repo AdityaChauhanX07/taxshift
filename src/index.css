@@ -39,6 +39,12 @@ body {
   animation: ts-rise-in 600ms ease 600ms both;
 }
 
+/* Credibility strip: simple opacity fade-in, delayed until after the hero
+   preview finishes its rise-in. */
+.ts-cred-strip {
+  animation: ts-fade-in 300ms ease 1.2s both;
+}
+
 /* Button hover states. Kept here so the transitions are pure CSS; the
    !important overrides the inline base colors set on these buttons. */
 .ts-btn-primary {
