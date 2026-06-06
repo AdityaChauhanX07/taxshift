@@ -75,7 +75,7 @@ TaxShift is an educational estimator using 2025 federal tax models (including OB
 
 ## Team
 
-**Aditya Chauhan**
+**Aditya Chauhan** · **Vladimir Khegai**
 
 ---
 
