@@ -69,31 +69,49 @@ export const EVENTS = [
     id: 'marriage',
     title: 'Getting Married',
     desc: 'Filing status, combined income, marriage bonus or penalty',
+    category: 'Filing Status',
+    categoryColor: '#CA8A04',
+    categoryColorLight: '#E5B94E',
   },
   {
     id: 'baby',
     title: 'Having a Baby',
     desc: 'Child Tax Credit, Head of Household status, dependent benefits',
+    category: 'Tax Credits',
+    categoryColor: '#2D6A4F',
+    categoryColorLight: '#34D399',
   },
   {
     id: 'home',
     title: 'Buying a Home',
     desc: 'Mortgage interest deduction, property taxes, standard vs. itemized',
+    category: 'Deductions',
+    categoryColor: '#6B7280',
+    categoryColorLight: '#9CA3AF',
   },
   {
     id: 'move',
     title: 'Moving States',
     desc: 'State income tax differential, partial-year considerations',
+    category: 'State Tax',
+    categoryColor: '#1D4ED8',
+    categoryColorLight: '#60A5FA',
   },
   {
     id: 'sidebiz',
     title: 'Starting a Side Business',
     desc: 'Self-employment tax, business deductions, additional income tax',
+    category: 'Self-Employment',
+    categoryColor: '#9B2C2C',
+    categoryColorLight: '#F87171',
   },
   {
     id: 'divorce',
     title: 'Getting Divorced',
     desc: 'Separate filings, lost joint benefits, credit reallocation',
+    category: 'Filing Status',
+    categoryColor: '#CA8A04',
+    categoryColorLight: '#E5B94E',
   },
 ]
 
@@ -175,6 +193,20 @@ export default function EventSelector({ selectedEvent, onSelect }) {
                 </svg>
               </span>
 
+              {/* Editorial category marker — colored text, no pill. */}
+              <span
+                style={{
+                  display: 'block',
+                  fontSize: 10,
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: '1.5px',
+                  color: selected ? event.categoryColorLight : event.categoryColor,
+                  marginBottom: 6,
+                }}
+              >
+                {event.category}
+              </span>
               <div
                 style={{
                   fontFamily: FONTS.mono,
