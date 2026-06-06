@@ -3,10 +3,9 @@
 
 body {
   font-family: 'DM Sans', system-ui, sans-serif;
+  /* Cream default so any gap between sections reads as cream; the dot-grid
+     texture is applied per-section (hero + form) in App.jsx, not globally. */
   background-color: #F5F3ED;
-  /* Very subtle dot-grid texture for tactile depth. */
-  background-image: radial-gradient(circle, #D6D3CB 0.5px, transparent 0.5px);
-  background-size: 24px 24px;
 }
 
 /* Fade the form and results sections in as they appear (opacity 0 → 1). */

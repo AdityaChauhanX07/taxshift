@@ -201,80 +201,99 @@ export default function App() {
   const totalIncome = selectedEvent ? computeTotalIncome(selectedEvent, formData) : 0
   const isMobile = useMediaQuery('(max-width: 639px)')
 
+  // Each section is a full-width band with its own background; the inner
+  // container re-centers content at 800px. hPad is the shared horizontal gutter.
+  const hPad = isMobile ? 16 : 24
+  const innerContainer = { maxWidth: 800, margin: '0 auto' }
+  // Subtle dot-grid texture, applied only to the cream hero and form bands.
+  const dotGrid = {
+    backgroundImage: 'radial-gradient(circle, #D6D3CB 0.5px, transparent 0.5px)',
+    backgroundSize: '24px 24px',
+  }
+
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: COLORS.bg,
-        backgroundImage: 'radial-gradient(circle, #D6D3CB 0.5px, transparent 0.5px)',
-        backgroundSize: '24px 24px',
-        color: COLORS.textPrimary,
-      }}
-    >
-      <div
-        style={{
-          maxWidth: 800,
-          margin: '0 auto',
-          padding: isMobile ? '0 16px 48px' : '0 20px 56px',
-        }}
-      >
-        {/* Header */}
-        <header style={{ padding: isMobile ? '40px 0 20px' : '56px 0 24px' }}>
-          <div
-            style={{
-              display: 'inline-block',
-              borderBottom: `2px solid ${COLORS.textPrimary}`,
-              paddingBottom: 4,
-            }}
-          >
-            <span style={{ fontFamily: FONTS.serif, fontSize: isMobile ? 36 : 48, lineHeight: 1 }}>
-              Tax<span style={{ fontStyle: 'italic' }}>Shift</span>
-            </span>
-          </div>
-          <p
-            style={{
-              fontFamily: FONTS.sans,
-              fontSize: 14,
-              color: COLORS.textSecondary,
-              margin: '14px 0 0',
-            }}
-          >
-            See how your next life event changes your taxes - before it happens
-          </p>
-          <p
-            style={{
-              fontFamily: FONTS.serif,
-              fontStyle: 'italic',
-              fontSize: 13,
-              color: COLORS.tagMuted,
-              margin: '6px 0 0',
-              maxWidth: 520,
-            }}
-          >
-            Americans make 4-5 major financial decisions per decade without knowing the tax impact.
-          </p>
-        </header>
+    <div style={{ minHeight: '100vh', background: COLORS.bg, color: COLORS.textPrimary }}>
+      {/* SECTION 1 — Hero: cream + dot grid */}
+      <div style={{ background: COLORS.bg, ...dotGrid }}>
+        <div style={{ ...innerContainer, padding: `0 ${hPad}px ${isMobile ? 24 : 32}px` }}>
+          <header style={{ padding: isMobile ? '40px 0 20px' : '56px 0 24px' }}>
+            <div
+              style={{
+                display: 'inline-block',
+                borderBottom: `2px solid ${COLORS.textPrimary}`,
+                paddingBottom: 4,
+              }}
+            >
+              <span
+                style={{ fontFamily: FONTS.serif, fontSize: isMobile ? 36 : 48, lineHeight: 1 }}
+              >
+                Tax<span style={{ fontStyle: 'italic' }}>Shift</span>
+              </span>
+            </div>
+            <p
+              style={{
+                fontFamily: FONTS.sans,
+                fontSize: 14,
+                color: COLORS.textSecondary,
+                margin: '14px 0 0',
+              }}
+            >
+              See how your next life event changes your taxes - before it happens
+            </p>
+            <p
+              style={{
+                fontFamily: FONTS.serif,
+                fontStyle: 'italic',
+                fontSize: 13,
+                color: COLORS.tagMuted,
+                margin: '6px 0 0',
+                maxWidth: 520,
+              }}
+            >
+              Americans make 4-5 major financial decisions per decade without knowing the tax
+              impact.
+            </p>
+          </header>
 
-        <HeroPreview />
+          <HeroPreview />
 
-        <div>
           <Disclaimer />
         </div>
+      </div>
 
-        <div style={{ marginTop: 28 }}>
+      {/* SECTION 2 — Selection: clean white stage, faintly bordered, no dots */}
+      <div
+        style={{
+          background: COLORS.card,
+          borderTop: `1px solid ${COLORS.disclaimerBg}`,
+          borderBottom: `1px solid ${COLORS.disclaimerBg}`,
+        }}
+      >
+        <div
+          style={{
+            ...innerContainer,
+            padding: isMobile ? `32px ${hPad}px` : `40px ${hPad}px 48px`,
+          }}
+        >
           <HowItWorks />
+          <div style={{ marginTop: 32 }}>
+            <EventSelector selectedEvent={selectedEvent} onSelect={handleSelect} />
+          </div>
         </div>
+      </div>
 
-        <div style={{ marginTop: 32 }}>
-          <EventSelector selectedEvent={selectedEvent} onSelect={handleSelect} />
-        </div>
-
-        {selectedEvent && (
+      {/* SECTION 3 — Form: back to warm cream + dot grid */}
+      {selectedEvent && (
+        <div style={{ background: COLORS.bg, ...dotGrid }}>
           <div
             ref={formRef}
             key={selectedEvent}
             className="ts-fade-in"
-            style={{ marginTop: 36, scrollMarginTop: 24 }}
+            style={{
+              ...innerContainer,
+              padding: isMobile ? `32px ${hPad}px` : `40px ${hPad}px`,
+              scrollMarginTop: 24,
+            }}
           >
             <InputForm
               eventId={selectedEvent}
@@ -285,14 +304,21 @@ export default function App() {
               errors={errors}
             />
           </div>
-        )}
+        </div>
+      )}
 
-        {results && (
+      {/* SECTION 4 — Results: dramatic full-width dark band */}
+      {results && (
+        <div style={{ background: '#1A1A1A' }}>
           <div
             ref={resultsRef}
             key={calcId}
             className="ts-fade-in"
-            style={{ marginTop: 36, scrollMarginTop: 24 }}
+            style={{
+              ...innerContainer,
+              padding: isMobile ? `32px ${hPad}px` : `48px ${hPad}px`,
+              scrollMarginTop: 24,
+            }}
           >
             <ResultsDashboard
               results={results}
@@ -302,37 +328,35 @@ export default function App() {
               onTryAnother={handleReset}
             />
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Footer */}
-        <footer
-          style={{
-            marginTop: 56,
-            borderTop: `1px solid ${COLORS.border}`,
-            padding: '20px 0 40px',
-          }}
-        >
-          <p
-            style={{
-              fontFamily: FONTS.sans,
-              fontSize: 12,
-              color: COLORS.textSecondary,
-              margin: 0,
-            }}
-          >
-            Built for DSOC Summer Edition 2026 · Tax, Compliance &amp; Regulatory Innovation
-          </p>
-          <p
-            style={{
-              fontFamily: FONTS.sans,
-              fontSize: 11,
-              color: COLORS.tagMuted,
-              margin: '8px 0 0',
-            }}
-          >
-            Built with React · Recharts · Gemini · Vercel
-          </p>
-        </footer>
+      {/* SECTION 5 — Footer: cream */}
+      <div style={{ background: COLORS.bg }}>
+        <div style={{ ...innerContainer, padding: `0 ${hPad}px` }}>
+          <footer style={{ borderTop: `1px solid ${COLORS.border}`, padding: '20px 0 40px' }}>
+            <p
+              style={{
+                fontFamily: FONTS.sans,
+                fontSize: 12,
+                color: COLORS.textSecondary,
+                margin: 0,
+              }}
+            >
+              Built for DSOC Summer Edition 2026 · Tax, Compliance &amp; Regulatory Innovation
+            </p>
+            <p
+              style={{
+                fontFamily: FONTS.sans,
+                fontSize: 11,
+                color: COLORS.tagMuted,
+                margin: '8px 0 0',
+              }}
+            >
+              Built with React · Recharts · Gemini · Vercel
+            </p>
+          </footer>
+        </div>
       </div>
     </div>
   )

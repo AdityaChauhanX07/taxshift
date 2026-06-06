@@ -140,17 +140,9 @@ export default function ResultsDashboard({ results, totalIncome, aiEnhancing, on
   const chartHeight = Math.max(120, chartData.length * 46 + 30)
 
   return (
-    <section
-      style={{
-        background: DARK.wrapperBg,
-        borderRadius: 6,
-        padding: isMobile ? '32px 24px' : '48px 40px',
-        // Pull out to the container's content edges so the dark block reads as a
-        // full section break rather than a card inside the page.
-        marginLeft: isMobile ? -16 : -20,
-        marginRight: isMobile ? -16 : -20,
-      }}
-    >
+    // The dark background and section padding are owned by the full-width
+    // results band in App; this section just lays out the content.
+    <section>
       {/* a) Hero delta */}
       <div
         style={{
