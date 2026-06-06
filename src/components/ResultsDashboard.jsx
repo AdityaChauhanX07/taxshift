@@ -71,8 +71,31 @@ function ChartTooltip({ active, payload }) {
   )
 }
 
-/** A single BEFORE/AFTER column: label, total, and effective rate. */
+/**
+ * Custom Recharts label rendered at the right end of each breakdown bar, so the
+ * dollar value is always visible without hovering (important for the demo).
+ */
+function BarValueLabel({ x, y, width, height, value }) {
+  if (value == null) return null
+  const positive = value >= 0
+  return (
+    <text
+      x={x + width + 6}
+      y={y + height / 2}
+      dy={4}
+      textAnchor="start"
+      fontFamily={FONTS.mono}
+      fontSize={12}
+      fill={positive ? DARK.savings : DARK.cost}
+    >
+      {formatCurrency(Math.abs(value))}
+    </text>
+  )
+}
+
+/** A single BEFORE/AFTER column: label, total, effective rate, and a rate bar. */
 function Column({ tag, scenario, totalIncome, accent }) {
+  const ratePct = totalIncome > 0 ? (scenario.total / totalIncome) * 100 : 0
   return (
     <div style={{ flex: 1, borderLeft: `3px solid ${accent}`, paddingLeft: 14 }}>
       <div style={{ ...labelStyle, fontSize: 13, color: DARK.muted, marginBottom: 8 }}>{tag}</div>
@@ -88,6 +111,25 @@ function Column({ tag, scenario, totalIncome, accent }) {
         }}
       >
         {formatPercent(scenario.total, totalIncome)} effective rate
+      </div>
+      {/* Thin bar visualizing the effective rate — makes before/after scannable. */}
+      <div
+        style={{
+          marginTop: 8,
+          height: 4,
+          background: DARK.cardBorder,
+          borderRadius: 2,
+          overflow: 'hidden',
+        }}
+      >
+        <div
+          style={{
+            width: `${Math.min(100, Math.max(0, ratePct))}%`,
+            height: '100%',
+            background: accent,
+            borderRadius: 2,
+          }}
+        />
       </div>
     </div>
   )
@@ -111,6 +153,12 @@ export default function ResultsDashboard({ results, totalIncome, aiEnhancing, on
   const costs = delta < 0
   const heroColor = saves ? DARK.savings : costs ? DARK.cost : DARK.amount
   const heroLabel = saves ? '/ year saved' : costs ? '/ year more tax' : '/ year - no change'
+  // Very faint glow tinted to match the verdict, so the number feels alive on dark.
+  const heroGlow = saves
+    ? '0 0 40px rgba(52, 211, 153, 0.15)'
+    : costs
+      ? '0 0 40px rgba(248, 113, 113, 0.15)'
+      : 'none'
 
   // Count the hero number up from $0 to the final delta over ~600ms (30 frames
   // at 50ms) for a "calculator" feel. The component is re-keyed per calculation
@@ -139,6 +187,9 @@ export default function ResultsDashboard({ results, totalIncome, aiEnhancing, on
   const chartData = breakdown.filter((d) => d.value !== 0 && d.type !== 'absolute')
   const chartHeight = Math.max(120, chartData.length * 46 + 30)
 
+  // Subtle horizontal rule used to separate the major result subsections.
+  const divider = <div style={{ height: 1, background: DARK.cardBorder, margin: '24px 0' }} />
+
   return (
     // The dark background and section padding are owned by the full-width
     // results band in App; this section just lays out the content.
@@ -147,11 +198,12 @@ export default function ResultsDashboard({ results, totalIncome, aiEnhancing, on
       <div
         style={{
           fontFamily: FONTS.mono,
-          fontSize: isMobile ? 32 : 48,
+          fontSize: isMobile ? 32 : 56,
           fontWeight: 700,
           color: heroColor,
           lineHeight: 1.1,
           letterSpacing: '-0.5px',
+          textShadow: heroGlow,
         }}
       >
         {formatCurrency(Math.abs(animatedDelta))}{' '}
@@ -163,7 +215,7 @@ export default function ResultsDashboard({ results, totalIncome, aiEnhancing, on
         <div
           style={{
             fontFamily: FONTS.sans,
-            fontSize: 14,
+            fontSize: 15,
             color: DARK.muted,
             marginTop: 8,
           }}
@@ -172,6 +224,8 @@ export default function ResultsDashboard({ results, totalIncome, aiEnhancing, on
         </div>
       )}
 
+      {divider}
+
       {/* b) Before → After */}
       <div
         style={{
@@ -179,7 +233,6 @@ export default function ResultsDashboard({ results, totalIncome, aiEnhancing, on
           flexDirection: isMobile ? 'column' : 'row',
           alignItems: isMobile ? 'stretch' : 'center',
           gap: isMobile ? 16 : 24,
-          marginTop: 28,
           background: DARK.cardBg,
           border: `1px solid ${DARK.cardBorder}`,
           borderRadius: 4,
@@ -195,47 +248,56 @@ export default function ResultsDashboard({ results, totalIncome, aiEnhancing, on
 
       {/* c) Breakdown chart */}
       {chartData.length > 0 && (
-        <div style={{ marginTop: 32 }}>
-          <div style={{ ...labelStyle, color: DARK.sectionLabel, marginBottom: 14 }}>
-            Where the change comes from
+        <>
+          {divider}
+          <div>
+            <div style={{ ...labelStyle, color: DARK.sectionLabel, marginBottom: 14 }}>
+              Where the change comes from
+            </div>
+            <div
+              style={{
+                width: '100%',
+                height: chartHeight,
+                background: DARK.cardBg,
+                border: `1px solid ${DARK.cardBorder}`,
+                borderRadius: 4,
+                padding: 20,
+                boxSizing: 'border-box',
+              }}
+            >
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={chartData}
+                  layout="vertical"
+                  margin={{ top: 0, right: 70, bottom: 0, left: 0 }}
+                >
+                  <XAxis type="number" hide domain={['dataMin', 'dataMax']} />
+                  <YAxis
+                    type="category"
+                    dataKey="label"
+                    width={180}
+                    tickLine={false}
+                    axisLine={false}
+                    tick={{ fontFamily: FONTS.sans, fontSize: 11, fill: DARK.axisTick }}
+                  />
+                  <ReferenceLine x={0} stroke={DARK.refLine} strokeWidth={1} />
+                  <Tooltip cursor={{ fill: 'rgba(255,255,255,0.06)' }} content={<ChartTooltip />} />
+                  <Bar
+                    dataKey="value"
+                    radius={1}
+                    barSize={20}
+                    isAnimationActive={false}
+                    label={<BarValueLabel />}
+                  >
+                    {chartData.map((d, i) => (
+                      <Cell key={i} fill={d.value >= 0 ? DARK.savings : DARK.cost} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-          <div
-            style={{
-              width: '100%',
-              height: chartHeight,
-              background: DARK.cardBg,
-              border: `1px solid ${DARK.cardBorder}`,
-              borderRadius: 4,
-              padding: 20,
-              boxSizing: 'border-box',
-            }}
-          >
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={chartData}
-                layout="vertical"
-                margin={{ top: 0, right: 16, bottom: 0, left: 0 }}
-              >
-                <XAxis type="number" hide domain={['dataMin', 'dataMax']} />
-                <YAxis
-                  type="category"
-                  dataKey="label"
-                  width={180}
-                  tickLine={false}
-                  axisLine={false}
-                  tick={{ fontFamily: FONTS.sans, fontSize: 11, fill: DARK.axisTick }}
-                />
-                <ReferenceLine x={0} stroke={DARK.refLine} strokeWidth={1} />
-                <Tooltip cursor={{ fill: 'rgba(255,255,255,0.06)' }} content={<ChartTooltip />} />
-                <Bar dataKey="value" radius={1} barSize={20} isAnimationActive={false}>
-                  {chartData.map((d, i) => (
-                    <Cell key={i} fill={d.value >= 0 ? DARK.savings : DARK.cost} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+        </>
       )}
 
       {/* d) Contextual note */}
@@ -257,31 +319,57 @@ export default function ResultsDashboard({ results, totalIncome, aiEnhancing, on
         </div>
       )}
 
-      {/* e) Insight panel */}
+      {/* e) Insight panel — framed as an editorial "expert quote" */}
       {insight && (
-        <div
-          style={{
-            marginTop: 28,
-            background: DARK.analysisBg,
-            border: `1px solid ${DARK.analysisBorder}`,
-            borderLeft: `3px solid ${DARK.analysisAccent}`,
-            borderRadius: 2,
-            padding: '18px 20px',
-          }}
-        >
-          <div style={{ ...labelStyle, color: DARK.sectionLabel, marginBottom: 10 }}>Analysis</div>
-          <p
+        <>
+          {divider}
+          <div
             style={{
-              fontFamily: FONTS.sans,
-              fontSize: isMobile ? 13.5 : 14.5,
-              lineHeight: 1.7,
-              color: DARK.insightText,
-              margin: 0,
+              position: 'relative',
+              overflow: 'hidden',
+              background: DARK.analysisBg,
+              border: `1px solid ${DARK.analysisBorder}`,
+              borderLeft: `3px solid ${DARK.analysisAccent}`,
+              borderRadius: 2,
+              padding: '18px 20px',
             }}
           >
-            {insight}
-          </p>
-        </div>
+            <span
+              aria-hidden="true"
+              style={{
+                position: 'absolute',
+                top: 12,
+                left: 16,
+                fontFamily: FONTS.serif,
+                fontSize: 48,
+                lineHeight: 1,
+                color: DARK.analysisAccent,
+                opacity: 0.3,
+                pointerEvents: 'none',
+                userSelect: 'none',
+              }}
+            >
+              “
+            </span>
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <div style={{ ...labelStyle, color: DARK.sectionLabel, marginBottom: 10 }}>
+                Analysis
+              </div>
+              <p
+                style={{
+                  fontFamily: FONTS.sans,
+                  fontSize: isMobile ? 13.5 : 14.5,
+                  lineHeight: 1.7,
+                  color: DARK.insightText,
+                  margin: 0,
+                  paddingLeft: 0,
+                }}
+              >
+                {insight}
+              </p>
+            </div>
+          </div>
+        </>
       )}
 
       {/* Subtle AI-enhancement indicator, shown only while the call is in flight */}

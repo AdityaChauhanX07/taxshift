@@ -58,6 +58,75 @@ body {
   background-color: #F0EDE5 !important;
 }
 
+/* ---------------------------------------------------------------------------
+   Form fields. Styling lives here (not inline) so the :focus left-border
+   accent can be a real pseudo-class. Padding-left shrinks by 2px on focus to
+   offset the border growing 1px -> 3px, keeping the text from shifting.
+   --------------------------------------------------------------------------- */
+.ts-field {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  color: #1A1A1A;
+  background: #FAFAF7;
+  border: 1px solid #D6D3CB;
+  border-radius: 2px;
+  height: 48px;
+  padding: 0 14px;
+  outline: none;
+  box-sizing: border-box;
+  width: 100%;
+  transition: border-color 150ms ease;
+}
+
+.ts-field:focus {
+  border-left-width: 3px;
+  border-left-color: #CA8A04;
+  padding-left: 12px;
+}
+
+/* Currency inputs reserve room on the left for the "$" adornment. */
+.ts-field--currency {
+  padding-left: 24px;
+}
+.ts-field--currency:focus {
+  padding-left: 22px;
+}
+
+/* Percentage inputs reserve room on the right for the "%" adornment. */
+.ts-field--percent {
+  padding-right: 28px;
+}
+
+/* Selects: strip the native arrow (a custom chevron is drawn in the wrapper). */
+.ts-field--select {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  cursor: pointer;
+  padding-right: 38px;
+}
+
+.ts-select-wrap {
+  position: relative;
+}
+
+.ts-chevron {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  color: #9B9790;
+  pointer-events: none;
+  transition: color 150ms ease;
+}
+
+/* Chevron picks up the amber accent while the select is focused. */
+.ts-select-wrap:focus-within .ts-chevron {
+  color: #CA8A04;
+}
+
 /* Secondary button variant for the dark results section. */
 .ts-btn-dark {
   transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;

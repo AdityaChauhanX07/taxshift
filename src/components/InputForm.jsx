@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { COLORS, FONTS } from '../utils/theme.js'
 import { useMediaQuery } from '../utils/useMediaQuery.js'
 import { ALL_STATES } from '../data/stateTaxData.js'
@@ -62,24 +61,41 @@ const FILING_OPTIONS = [
   { value: 'hoh', label: 'Head of Household' },
 ]
 
+/**
+ * For events with 5+ fields, the first three (income, status, state) form the
+ * "basics" group and the rest are grouped under this heading.
+ */
+const GROUP_LABELS = {
+  home: 'Property details',
+  sidebiz: 'Business details',
+  divorce: 'Family details',
+}
+
+/** Small downward chevron drawn inside select wrappers. */
+function Chevron() {
+  return (
+    <span className="ts-chevron" aria-hidden="true">
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 16 16"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M4 6 L8 10 L12 6" />
+      </svg>
+    </span>
+  )
+}
+
 /** Strip everything but digits and a single decimal point. */
 function sanitizeNumeric(raw) {
   const cleaned = String(raw).replace(/[^0-9.]/g, '')
   const parts = cleaned.split('.')
   return parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : cleaned
-}
-
-const inputBase = {
-  fontFamily: FONTS.mono,
-  fontSize: 14,
-  color: COLORS.textPrimary,
-  background: COLORS.inputBg,
-  border: `1px solid ${COLORS.border}`,
-  borderRadius: 2,
-  padding: '9px 11px',
-  outline: 'none',
-  boxSizing: 'border-box',
-  width: '100%',
 }
 
 const labelAbove = {
@@ -103,7 +119,6 @@ const labelAbove = {
  * }} props
  */
 export default function InputForm({ eventId, formData, onChange, onCalculate, onReset, errors = [] }) {
-  const [focusedKey, setFocusedKey] = useState(null)
   const isMobile = useMediaQuery('(max-width: 639px)')
   const fields = EVENT_FIELDS[eventId] || []
   const title = EVENTS.find((e) => e.id === eventId)?.title || 'Your numbers'
@@ -111,19 +126,19 @@ export default function InputForm({ eventId, formData, onChange, onCalculate, on
   const renderField = (field) => {
     const { key, label, kind, placeholder } = field
     const value = formData[key] ?? ''
-    const focused = focusedKey === key
-    const borderColor = focused ? COLORS.textPrimary : COLORS.border
 
     if (kind === 'bool') {
       const current = formData[key] === true || formData[key] === undefined
+      const options = [
+        { v: true, t: 'Yes' },
+        { v: false, t: 'No' },
+      ]
       return (
         <div key={key} style={{ flexBasis: '100%' }}>
           <span style={labelAbove}>{label}</span>
-          <div style={{ display: 'flex', gap: 8 }}>
-            {[
-              { v: true, t: 'Yes' },
-              { v: false, t: 'No' },
-            ].map((opt) => {
+          {/* Connected toggle group — reads as one control, not two buttons. */}
+          <div style={{ display: 'flex' }}>
+            {options.map((opt, i) => {
               const active = current === opt.v
               return (
                 <button
@@ -135,11 +150,15 @@ export default function InputForm({ eventId, formData, onChange, onCalculate, on
                     fontFamily: FONTS.sans,
                     fontSize: 13,
                     fontWeight: 500,
-                    padding: '8px 20px',
-                    borderRadius: 2,
+                    padding: '10px 24px',
+                    borderRadius: i === 0 ? '4px 0 0 4px' : '0 4px 4px 0',
                     border: `1px solid ${active ? COLORS.textPrimary : COLORS.border}`,
-                    background: active ? COLORS.textPrimary : 'transparent',
+                    marginLeft: i === 0 ? 0 : -1,
+                    position: 'relative',
+                    zIndex: active ? 1 : 0,
+                    background: active ? COLORS.textPrimary : COLORS.inputBg,
                     color: active ? COLORS.selectedText : COLORS.textSecondary,
+                    transition: 'background 150ms ease',
                   }}
                 >
                   {opt.t}
@@ -159,25 +178,21 @@ export default function InputForm({ eventId, formData, onChange, onCalculate, on
       return (
         <div key={key} style={{ flexBasis: '100%' }}>
           <label style={labelAbove}>{label}</label>
-          <select
-            value={value}
-            onChange={(e) => onChange(key, e.target.value)}
-            onFocus={() => setFocusedKey(key)}
-            onBlur={() => setFocusedKey(null)}
-            style={{
-              ...inputBase,
-              fontFamily: FONTS.sans,
-              borderColor,
-              cursor: 'pointer',
-            }}
-          >
-            {kind === 'state' && <option value="">Select a state…</option>}
-            {options.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
+          <div className="ts-select-wrap">
+            <select
+              className="ts-field ts-field--select"
+              value={value}
+              onChange={(e) => onChange(key, e.target.value)}
+            >
+              {kind === 'state' && <option value="">Select a state…</option>}
+              {options.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+            <Chevron />
+          </div>
         </div>
       )
     }
@@ -186,62 +201,45 @@ export default function InputForm({ eventId, formData, onChange, onCalculate, on
     const isPercent = field.valueType === 'percentage'
     const isCurrency = kind === 'currency'
     const small = kind === 'small'
+    const inputClass = `ts-field${isCurrency ? ' ts-field--currency' : ''}${
+      isPercent ? ' ts-field--percent' : ''
+    }`
+    const adornment = {
+      position: 'absolute',
+      top: '50%',
+      transform: 'translateY(-50%)',
+      fontFamily: FONTS.mono,
+      fontSize: 14,
+      color: COLORS.textSecondary,
+      pointerEvents: 'none',
+    }
 
     return (
-      <div key={key} style={{ flexBasis: small && !isMobile ? 120 : '100%' }}>
+      <div key={key} style={{ flexBasis: small && !isMobile ? 'calc(50% - 8px)' : '100%' }}>
         <label style={labelAbove}>{label}</label>
         <div style={{ position: 'relative' }}>
-          {isCurrency && (
-            <span
-              style={{
-                position: 'absolute',
-                left: 11,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                fontFamily: FONTS.mono,
-                fontSize: 14,
-                color: COLORS.textSecondary,
-                pointerEvents: 'none',
-              }}
-            >
-              $
-            </span>
-          )}
+          {isCurrency && <span style={{ ...adornment, left: 14 }}>$</span>}
           <input
+            className={inputClass}
             type="text"
             inputMode="decimal"
             value={value}
             placeholder={placeholder}
             onChange={(e) => onChange(key, sanitizeNumeric(e.target.value))}
-            onFocus={() => setFocusedKey(key)}
-            onBlur={() => setFocusedKey(null)}
-            style={{
-              ...inputBase,
-              borderColor,
-              paddingLeft: isCurrency ? 22 : 11,
-              paddingRight: isPercent ? 26 : 11,
-            }}
           />
-          {isPercent && (
-            <span
-              style={{
-                position: 'absolute',
-                right: 11,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                fontFamily: FONTS.mono,
-                fontSize: 14,
-                color: COLORS.textSecondary,
-                pointerEvents: 'none',
-              }}
-            >
-              %
-            </span>
-          )}
+          {isPercent && <span style={{ ...adornment, right: 14 }}>%</span>}
         </div>
       </div>
     )
   }
+
+  // Container for a row of fields (flex-wrap so small fields can pair up).
+  const fieldRow = { display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'flex-end' }
+  // 5+ field events split into a "basics" group (first three) and a labeled
+  // second group of event-specific fields.
+  const grouped = fields.length >= 5
+  const group1 = grouped ? fields.slice(0, 3) : fields
+  const group2 = grouped ? fields.slice(3) : []
 
   return (
     <section
@@ -265,23 +263,27 @@ export default function InputForm({ eventId, formData, onChange, onCalculate, on
         {title} - your numbers
       </h2>
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'flex-end' }}>
-        {fields.flatMap((field) => {
-          const el = renderField(field)
-          // For longer forms, divide the common fields from the event-specific
-          // ones with a thin full-width rule after the state selector.
-          if (fields.length >= 5 && field.key === 'state') {
-            return [
-              el,
-              <div
-                key={`${field.key}-divider`}
-                style={{ flexBasis: '100%', height: 1, background: COLORS.border, margin: '4px 0' }}
-              />,
-            ]
-          }
-          return [el]
-        })}
-      </div>
+      <div style={fieldRow}>{group1.map(renderField)}</div>
+
+      {grouped && (
+        <>
+          <div style={{ height: 1, background: COLORS.panelBorder, margin: '20px 0' }} />
+          <div
+            style={{
+              fontFamily: FONTS.sans,
+              fontSize: 11,
+              fontWeight: 500,
+              textTransform: 'uppercase',
+              letterSpacing: '1px',
+              color: COLORS.tagMuted,
+              marginBottom: 12,
+            }}
+          >
+            {GROUP_LABELS[eventId]}
+          </div>
+          <div style={fieldRow}>{group2.map(renderField)}</div>
+        </>
+      )}
 
       {errors.length > 0 && (
         <div
