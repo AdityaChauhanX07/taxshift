@@ -1,7 +1,6 @@
-import { COLORS, FONTS } from '../utils/theme.js'
-import { useMediaQuery } from '../utils/useMediaQuery.js'
 import { ALL_STATES } from '../data/stateTaxData.js'
 import { EVENTS } from './EventSelector.jsx'
+import HowItWorks from './HowItWorks.jsx'
 
 /**
  * Field definitions per event. Each field carries both a render `kind` and a
@@ -74,20 +73,39 @@ const GROUP_LABELS = {
 /** Small downward chevron drawn inside select wrappers. */
 function Chevron() {
   return (
-    <span className="ts-chevron" aria-hidden="true">
+    <span className="chev" aria-hidden="true">
       <svg
-        width="16"
-        height="16"
-        viewBox="0 0 16 16"
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
-        strokeWidth="1.5"
+        strokeWidth="1.6"
         strokeLinecap="round"
         strokeLinejoin="round"
       >
-        <path d="M4 6 L8 10 L12 6" />
+        <path d="M6 9l6 6 6-6" />
       </svg>
     </span>
+  )
+}
+
+/** Right arrow for the calculate button. */
+function ArrowRight() {
+  return (
+    <svg
+      className="arr"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M5 12h14M13 6l6 6-6 6" />
+    </svg>
   )
 }
 
@@ -96,15 +114,6 @@ function sanitizeNumeric(raw) {
   const cleaned = String(raw).replace(/[^0-9.]/g, '')
   const parts = cleaned.split('.')
   return parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : cleaned
-}
-
-const labelAbove = {
-  display: 'block',
-  fontFamily: FONTS.sans,
-  fontSize: 13,
-  fontWeight: 500,
-  color: COLORS.textPrimary,
-  marginBottom: 6,
 }
 
 /**
@@ -119,9 +128,10 @@ const labelAbove = {
  * }} props
  */
 export default function InputForm({ eventId, formData, onChange, onCalculate, onReset, errors = [] }) {
-  const isMobile = useMediaQuery('(max-width: 639px)')
   const fields = EVENT_FIELDS[eventId] || []
-  const title = EVENTS.find((e) => e.id === eventId)?.title || 'Your numbers'
+  const event = EVENTS.find((e) => e.id === eventId)
+  const title = event?.title || 'Your numbers'
+  const accent = event?.cat || 'amber'
 
   const renderField = (field) => {
     const { key, label, kind, placeholder } = field
@@ -129,42 +139,16 @@ export default function InputForm({ eventId, formData, onChange, onCalculate, on
 
     if (kind === 'bool') {
       const current = formData[key] === true || formData[key] === undefined
-      const options = [
-        { v: true, t: 'Yes' },
-        { v: false, t: 'No' },
-      ]
       return (
-        <div key={key} style={{ flexBasis: '100%' }}>
-          <span style={labelAbove}>{label}</span>
-          {/* Connected toggle group — reads as one control, not two buttons. */}
-          <div style={{ display: 'flex' }}>
-            {options.map((opt, i) => {
-              const active = current === opt.v
-              return (
-                <button
-                  key={opt.t}
-                  type="button"
-                  onClick={() => onChange(key, opt.v)}
-                  style={{
-                    cursor: 'pointer',
-                    fontFamily: FONTS.sans,
-                    fontSize: 13,
-                    fontWeight: 500,
-                    padding: '10px 24px',
-                    borderRadius: i === 0 ? '4px 0 0 4px' : '0 4px 4px 0',
-                    border: `1px solid ${active ? COLORS.textPrimary : COLORS.border}`,
-                    marginLeft: i === 0 ? 0 : -1,
-                    position: 'relative',
-                    zIndex: active ? 1 : 0,
-                    background: active ? COLORS.textPrimary : COLORS.inputBg,
-                    color: active ? COLORS.selectedText : COLORS.textSecondary,
-                    transition: 'background 150ms ease',
-                  }}
-                >
-                  {opt.t}
-                </button>
-              )
-            })}
+        <div className="field" key={key}>
+          <label>{label}</label>
+          <div className="toggle">
+            <button type="button" className={current ? 'on' : ''} onClick={() => onChange(key, true)}>
+              Yes
+            </button>
+            <button type="button" className={!current ? 'on' : ''} onClick={() => onChange(key, false)}>
+              No
+            </button>
           </div>
         </div>
       )
@@ -176,14 +160,10 @@ export default function InputForm({ eventId, formData, onChange, onCalculate, on
           ? ALL_STATES.map((s) => ({ value: s.code, label: s.name }))
           : FILING_OPTIONS
       return (
-        <div key={key} style={{ flexBasis: '100%' }}>
-          <label style={labelAbove}>{label}</label>
-          <div className="ts-select-wrap">
-            <select
-              className="ts-field ts-field--select"
-              value={value}
-              onChange={(e) => onChange(key, e.target.value)}
-            >
+        <div className="field" key={key}>
+          <label>{label}</label>
+          <div className="select-shell">
+            <select value={value} onChange={(e) => onChange(key, e.target.value)}>
               {kind === 'state' && <option value="">Select a state…</option>}
               {options.map((o) => (
                 <option key={o.value} value={o.value}>
@@ -200,41 +180,45 @@ export default function InputForm({ eventId, formData, onChange, onCalculate, on
     // currency or small numeric input
     const isPercent = field.valueType === 'percentage'
     const isCurrency = kind === 'currency'
-    const small = kind === 'small'
-    const inputClass = `ts-field${isCurrency ? ' ts-field--currency' : ''}${
-      isPercent ? ' ts-field--percent' : ''
-    }`
-    const adornment = {
-      position: 'absolute',
-      top: '50%',
-      transform: 'translateY(-50%)',
-      fontFamily: FONTS.mono,
-      fontSize: 14,
-      color: COLORS.textSecondary,
-      pointerEvents: 'none',
-    }
-
     return (
-      <div key={key} style={{ flexBasis: small && !isMobile ? 'calc(50% - 8px)' : '100%' }}>
-        <label style={labelAbove}>{label}</label>
-        <div style={{ position: 'relative' }}>
-          {isCurrency && <span style={{ ...adornment, left: 14 }}>$</span>}
+      <div className="field" key={key}>
+        <label>{label}</label>
+        <div className="input-shell">
+          {isCurrency && <span className="pre">$</span>}
           <input
-            className={inputClass}
             type="text"
             inputMode="decimal"
             value={value}
             placeholder={placeholder}
             onChange={(e) => onChange(key, sanitizeNumeric(e.target.value))}
           />
-          {isPercent && <span style={{ ...adornment, right: 14 }}>%</span>}
+          {isPercent && <span className="suf">%</span>}
         </div>
       </div>
     )
   }
 
-  // Container for a row of fields (flex-wrap so small fields can pair up).
-  const fieldRow = { display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'flex-end' }
+  // Render a list of fields, pairing consecutive `small` fields side by side.
+  const renderGroup = (list) => {
+    const out = []
+    for (let i = 0; i < list.length; i++) {
+      const f = list[i]
+      const next = list[i + 1]
+      if (f.kind === 'small' && next && next.kind === 'small') {
+        out.push(
+          <div className="field-row" key={`row-${f.key}`}>
+            {renderField(f)}
+            {renderField(next)}
+          </div>,
+        )
+        i++
+      } else {
+        out.push(renderField(f))
+      }
+    }
+    return out
+  }
+
   // 5+ field events split into a "basics" group (first three) and a labeled
   // second group of event-specific fields.
   const grouped = fields.length >= 5
@@ -242,113 +226,40 @@ export default function InputForm({ eventId, formData, onChange, onCalculate, on
   const group2 = grouped ? fields.slice(3) : []
 
   return (
-    <section
-      style={{
-        background: COLORS.card,
-        border: `1px solid ${COLORS.border}`,
-        borderTop: `2px solid ${COLORS.accent}`,
-        borderRadius: 2,
-        padding: isMobile ? 16 : 28,
-      }}
-    >
-      <h2
-        style={{
-          fontFamily: FONTS.serif,
-          fontSize: 24,
-          fontWeight: 400,
-          color: COLORS.textPrimary,
-          margin: '0 0 22px',
-        }}
-      >
-        {title} - your numbers
-      </h2>
+    <div className="form-card" style={{ '--accent': `var(--c-${accent})` }}>
+      <HowItWorks stage={1} />
 
-      <div style={fieldRow}>{group1.map(renderField)}</div>
+      <h2 style={{ marginTop: 28 }}>
+        {title} <span className="em">— your numbers</span>
+      </h2>
+      {event?.desc && <p className="form-sub">{event.desc}</p>}
+
+      {renderGroup(group1)}
 
       {grouped && (
         <>
-          <div style={{ height: 1, background: COLORS.panelBorder, margin: '20px 0' }} />
-          <div
-            style={{
-              fontFamily: FONTS.sans,
-              fontSize: 11,
-              fontWeight: 500,
-              textTransform: 'uppercase',
-              letterSpacing: '1px',
-              color: COLORS.tagMuted,
-              marginBottom: 12,
-            }}
-          >
-            {GROUP_LABELS[eventId]}
-          </div>
-          <div style={fieldRow}>{group2.map(renderField)}</div>
+          <div className="field-group-label">{GROUP_LABELS[eventId]}</div>
+          {renderGroup(group2)}
         </>
       )}
 
       {errors.length > 0 && (
-        <div
-          style={{
-            marginTop: 20,
-            background: COLORS.errorBg,
-            border: `1px solid ${COLORS.errorBorder}`,
-            borderRadius: 2,
-            padding: '12px 14px',
-          }}
-        >
+        <div className="form-errors">
           {errors.map((err, i) => (
-            <div
-              key={i}
-              style={{
-                fontFamily: FONTS.sans,
-                fontSize: 13,
-                color: COLORS.cost,
-                lineHeight: 1.6,
-              }}
-            >
-              {err}
-            </div>
+            <div key={i}>{err}</div>
           ))}
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: 12, marginTop: 24 }}>
-        <button
-          type="button"
-          onClick={onCalculate}
-          className="ts-btn-primary"
-          style={{
-            cursor: 'pointer',
-            fontFamily: FONTS.sans,
-            fontSize: 14,
-            fontWeight: 600,
-            color: COLORS.bg,
-            background: COLORS.textPrimary,
-            border: `1px solid ${COLORS.textPrimary}`,
-            borderRadius: 2,
-            padding: '11px 22px',
-          }}
-        >
+      <div className="form-actions">
+        <button type="button" onClick={onCalculate} className="btn-calc">
           Calculate impact
+          <ArrowRight />
         </button>
-        <button
-          type="button"
-          onClick={onReset}
-          className="ts-btn-secondary"
-          style={{
-            cursor: 'pointer',
-            fontFamily: FONTS.sans,
-            fontSize: 14,
-            fontWeight: 500,
-            color: COLORS.textSecondary,
-            background: 'transparent',
-            border: `1px solid ${COLORS.border}`,
-            borderRadius: 2,
-            padding: '11px 22px',
-          }}
-        >
+        <button type="button" onClick={onReset} className="btn-reset">
           Start over
         </button>
       </div>
-    </section>
+    </div>
   )
 }

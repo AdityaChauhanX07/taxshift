@@ -1,117 +1,130 @@
-import { useState } from 'react'
-import { COLORS, FONTS } from '../utils/theme.js'
-import { useMediaQuery } from '../utils/useMediaQuery.js'
+import Reveal from './Reveal.jsx'
 
 /**
- * Minimal, stroke-based identifier icons per event. Each renders inside a
- * shared 28x28 viewBox <svg> that sets stroke="currentColor", so the color is
- * driven entirely by the wrapping span (selected vs. default card state).
+ * Minimal stroke glyph per event. Renders inside a 24x24 viewBox with
+ * stroke="currentColor", so the card's accent color drives it.
+ * @param {{ name: string, size?: number }} props
  */
-const ICON_PATHS = {
-  // Two interlocking rings.
-  marriage: (
-    <>
-      <circle cx="10" cy="14" r="7" />
-      <circle cx="18" cy="14" r="7" />
-    </>
-  ),
-  // Head + onesie body with two arm bumps and a leg notch.
-  baby: (
-    <>
-      <circle cx="14" cy="7" r="3" />
-      <path d="M10 12 L18 12 L17 20 L15 20 L14 18 L13 20 L11 20 Z" />
-      <path d="M10 13 L8 16" />
-      <path d="M18 13 L20 16" />
-    </>
-  ),
-  // Triangle roof on a rectangle body with a center door.
-  home: (
-    <>
-      <path d="M5 13 L14 5 L23 13" />
-      <path d="M7 13 L7 22 L21 22 L21 13" />
-      <path d="M11.5 22 L11.5 17 L16.5 17 L16.5 22" />
-    </>
-  ),
-  // Location pin (circle + point) with a curved arrow sweeping right.
-  move: (
-    <>
-      <circle cx="7" cy="8" r="3" />
-      <path d="M4.8 10 L7 14 L9.2 10" />
-      <path d="M11 17 Q16 18.5 20 13" />
-      <path d="M17.5 11.5 L20 13 L17.5 14.5" />
-    </>
-  ),
-  // Briefcase: body, handle, clasp line.
-  sidebiz: (
-    <>
-      <rect x="5" y="10" width="18" height="11" rx="1.5" />
-      <path d="M11 10 L11 8 L17 8 L17 10" />
-      <path d="M5 15 L23 15" />
-    </>
-  ),
-  // A single stem forking into two diverging legs.
-  divorce: (
-    <>
-      <path d="M14 4 L14 12" />
-      <path d="M14 12 L9 23" />
-      <path d="M14 12 L19 23" />
-    </>
-  ),
+function Glyph({ name, size = 24 }) {
+  const common = {
+    width: size,
+    height: size,
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 1.5,
+    strokeLinecap: 'round',
+    strokeLinejoin: 'round',
+  }
+  if (name === 'rings') {
+    return (
+      <svg {...common}>
+        <circle cx="9" cy="13" r="5" />
+        <circle cx="15" cy="13" r="5" />
+        <path d="M9 8l1.5-3h3L15 8" />
+      </svg>
+    )
+  }
+  if (name === 'baby') {
+    return (
+      <svg {...common}>
+        <circle cx="12" cy="8" r="4" />
+        <path d="M6 21c0-4 2.7-6 6-6s6 2 6 6" />
+        <path d="M10 7.5h.01M14 7.5h.01" />
+      </svg>
+    )
+  }
+  const paths = {
+    home: 'M3 11l9-7 9 7M5 10v10h5v-6h4v6h5V10',
+    pin: 'M12 22s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12z M12 10.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z',
+    briefcase: 'M3 8h18v12H3zM8 8V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18',
+    split: 'M6 3v6a6 6 0 0 0 6 6 6 6 0 0 1 6 6v0M6 21v0',
+  }
+  return (
+    <svg {...common}>
+      <path d={paths[name] || paths.home} />
+    </svg>
+  )
+}
+
+/** Small right arrow used in the card's "Run this scenario" link. */
+function ArrowRight({ size = 14 }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M5 12h14M13 6l6 6-6 6" />
+    </svg>
+  )
 }
 
 /**
  * The six supported life events, in display order. Exported so InputForm can
- * reuse the titles without duplicating the list.
+ * reuse the titles without duplicating the list. `cat` maps to a `--c-<cat>`
+ * accent variable defined in index.css.
  */
 // eslint-disable-next-line react-refresh/only-export-components -- shared event list consumed by App.jsx and InputForm.jsx
 export const EVENTS = [
   {
     id: 'marriage',
+    num: '01',
+    cat: 'amber',
+    kicker: 'Filing status',
+    glyph: 'rings',
     title: 'Getting Married',
-    desc: 'Filing status, combined income, marriage bonus or penalty',
-    category: 'Filing Status',
-    categoryColor: '#CA8A04',
-    categoryColorLight: '#E5B94E',
+    desc: 'Two incomes, one return. The marriage bonus, or penalty, depends on the gap between you.',
   },
   {
     id: 'baby',
+    num: '02',
+    cat: 'blue',
+    kicker: 'Tax credits',
+    glyph: 'baby',
     title: 'Having a Baby',
-    desc: 'Child Tax Credit, Head of Household status, dependent benefits',
-    category: 'Tax Credits',
-    categoryColor: '#2D6A4F',
-    categoryColorLight: '#34D399',
+    desc: 'The Child Tax Credit, dependent benefits, and a possible jump to Head of Household.',
   },
   {
     id: 'home',
+    num: '03',
+    cat: 'green',
+    kicker: 'Deductions',
+    glyph: 'home',
     title: 'Buying a Home',
-    desc: 'Mortgage interest deduction, property taxes, standard vs. itemized',
-    category: 'Deductions',
-    categoryColor: '#6B7280',
-    categoryColorLight: '#9CA3AF',
+    desc: 'Mortgage interest, property tax, and whether itemizing finally beats the standard deduction.',
   },
   {
     id: 'move',
+    num: '04',
+    cat: 'slate',
+    kicker: 'State tax',
+    glyph: 'pin',
     title: 'Moving States',
-    desc: 'State income tax differential, partial-year considerations',
-    category: 'State Tax',
-    categoryColor: '#1D4ED8',
-    categoryColorLight: '#60A5FA',
+    desc: 'The same paycheck, a different state line. State income tax can swing thousands.',
   },
   {
     id: 'sidebiz',
+    num: '05',
+    cat: 'red',
+    kicker: 'Self-employment',
+    glyph: 'briefcase',
     title: 'Starting a Side Business',
-    desc: 'Self-employment tax, business deductions, additional income tax',
-    category: 'Self-Employment',
-    categoryColor: '#9B2C2C',
-    categoryColorLight: '#F87171',
+    desc: 'New income, but self-employment tax and the deductions that soften the blow.',
   },
   {
     id: 'divorce',
+    num: '06',
+    cat: 'violet',
+    kicker: 'Filing status',
+    glyph: 'split',
     title: 'Getting Divorced',
-    desc: 'Separate filings, lost joint benefits, credit reallocation',
-    category: 'Filing Status',
-    categoryColor: '#CA8A04',
-    categoryColorLight: '#E5B94E',
+    desc: 'Separate returns, lost joint benefits, and how dependents get reallocated.',
   },
 ]
 
@@ -120,123 +133,45 @@ export const EVENTS = [
  * @param {{selectedEvent: string|null, onSelect: (id: string) => void}} props
  */
 export default function EventSelector({ selectedEvent, onSelect }) {
-  const [hovered, setHovered] = useState(null)
-  const isMobile = useMediaQuery('(max-width: 639px)')
-  const iconSize = isMobile ? 24 : 28
-
   return (
     <section>
-      <h2
-        style={{
-          fontFamily: FONTS.serif,
-          fontSize: 24,
-          fontWeight: 400,
-          color: COLORS.textPrimary,
-          margin: '0 0 16px',
-        }}
-      >
-        What's changing?
-      </h2>
+      <Reveal className="section-head">
+        <span className="kicker">Step 01</span>
+        <h2>What's changing?</h2>
+        <p>
+          Six of life's biggest financial decisions, each with its own tax story. Pick one to
+          model.
+        </p>
+      </Reveal>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {EVENTS.map((event, i) => {
-          const selected = selectedEvent === event.id
-          const isHovered = hovered === event.id && !selected
-          const tag = String(i + 1).padStart(2, '0')
-
+      <div className="event-grid">
+        {EVENTS.map((ev, i) => {
+          const selected = selectedEvent === ev.id
           return (
-            <button
-              key={event.id}
-              type="button"
-              className={`ts-event-card${selected ? ' is-selected' : ''}`}
-              onClick={() => onSelect(event.id)}
-              onMouseEnter={() => setHovered(event.id)}
-              onMouseLeave={() => setHovered(null)}
-              style={{
-                position: 'relative',
-                textAlign: 'left',
-                cursor: 'pointer',
-                background: selected ? COLORS.textPrimary : COLORS.card,
-                border: `1px solid ${
-                  selected || isHovered ? COLORS.textPrimary : COLORS.border
-                }`,
-                borderRadius: 2,
-                padding: '20px 22px',
-                fontFamily: FONTS.sans,
-              }}
-            >
-              {/* Subtle stroke-based identifier icon, top-right corner. */}
-              <span
-                aria-hidden="true"
-                style={{
-                  position: 'absolute',
-                  top: isMobile ? 12 : 16,
-                  right: isMobile ? 14 : 18,
-                  display: 'flex',
-                  color: selected ? COLORS.textSecondary : COLORS.tagMuted,
-                  opacity: isHovered ? 0.8 : 0.5,
-                  transition: 'opacity 200ms ease',
-                  pointerEvents: 'none',
-                }}
+            <Reveal key={ev.id} delay={Math.min(5, (i % 3) + 1)}>
+              <button
+                type="button"
+                className={`event-card paper-grid${selected ? ' selected' : ''}`}
+                style={{ '--accent': `var(--c-${ev.cat})` }}
+                onClick={() => onSelect(ev.id)}
               >
-                <svg
-                  width={iconSize}
-                  height={iconSize}
-                  viewBox="0 0 28 28"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  {ICON_PATHS[event.id]}
-                </svg>
-              </span>
-
-              {/* Editorial category marker — colored text, no pill. */}
-              <span
-                style={{
-                  display: 'block',
-                  fontSize: 10,
-                  fontWeight: 600,
-                  textTransform: 'uppercase',
-                  letterSpacing: '1.5px',
-                  color: selected ? event.categoryColorLight : event.categoryColor,
-                  marginBottom: 6,
-                }}
-              >
-                {event.category}
-              </span>
-              <div
-                style={{
-                  fontFamily: FONTS.mono,
-                  fontSize: 11,
-                  color: selected ? COLORS.selectedDesc : COLORS.tagMuted,
-                  marginBottom: 8,
-                }}
-              >
-                {tag}
-              </div>
-              <div
-                style={{
-                  fontSize: 16,
-                  fontWeight: 600,
-                  color: selected ? COLORS.selectedText : COLORS.textPrimary,
-                  marginBottom: 5,
-                }}
-              >
-                {event.title}
-              </div>
-              <div
-                style={{
-                  fontSize: 12.5,
-                  lineHeight: 1.45,
-                  color: selected ? COLORS.selectedDesc : COLORS.textSecondary,
-                }}
-              >
-                {event.desc}
-              </div>
-            </button>
+                <div className="event-top">
+                  <div>
+                    <div className="event-cat">{ev.kicker}</div>
+                    <div className="event-num">{ev.num}</div>
+                  </div>
+                  <span className="event-glyph">
+                    <Glyph name={ev.glyph} size={24} />
+                  </span>
+                </div>
+                <h3>{ev.title}</h3>
+                <p>{ev.desc}</p>
+                <span className="event-go">
+                  Run this scenario
+                  <ArrowRight size={14} />
+                </span>
+              </button>
+            </Reveal>
           )
         })}
       </div>

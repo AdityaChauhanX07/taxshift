@@ -1,19 +1,38 @@
 import { useState, useRef, useEffect } from 'react'
-import { COLORS, FONTS } from './utils/theme.js'
-import { useMediaQuery } from './utils/useMediaQuery.js'
 import { parseNumericInput } from './utils/formatters.js'
 import { validateField } from './utils/validation.js'
 import { calculateLifeEvent } from './engine/lifeEvents.js'
 import { generateFallbackInsight } from './ai/fallbackTemplates.js'
 import { fetchAIInsight } from './ai/apiClient.js'
+import Nav, { Wordmark } from './components/Nav.jsx'
+import Reveal from './components/Reveal.jsx'
 import Disclaimer from './components/Disclaimer.jsx'
 import HeroPreview from './components/HeroPreview.jsx'
 import CredibilityStrip from './components/CredibilityStrip.jsx'
 import CoverageSection from './components/CoverageSection.jsx'
 import HowItWorks from './components/HowItWorks.jsx'
-import EventSelector from './components/EventSelector.jsx'
+import EventSelector, { EVENTS } from './components/EventSelector.jsx'
 import InputForm, { EVENT_FIELDS } from './components/InputForm.jsx'
 import ResultsDashboard from './components/ResultsDashboard.jsx'
+
+/** Small inline right-arrow for the hero's primary button. */
+function ArrowRight() {
+  return (
+    <svg
+      className="arr"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M5 12h14M13 6l6 6-6 6" />
+    </svg>
+  )
+}
 
 /** Build the default formData for a freshly selected event. */
 function defaultsFor(eventId) {
@@ -111,10 +130,16 @@ export default function App() {
   // re-keys the dashboard so the count-up animation restarts cleanly.
   const [calcId, setCalcId] = useState(0)
 
+  const selectorRef = useRef(null)
   const formRef = useRef(null)
   const resultsRef = useRef(null)
   // Monotonic token so a stale in-flight AI response can't clobber newer state.
   const aiRequestRef = useRef(0)
+
+  // Smooth-scroll to the event selector (used by the nav CTA and hero buttons).
+  const goToSelector = () => {
+    selectorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 
   // Smooth-scroll the form into view when an event is first selected.
   useEffect(() => {
@@ -201,134 +226,70 @@ export default function App() {
   }
 
   const totalIncome = selectedEvent ? computeTotalIncome(selectedEvent, formData) : 0
-  const isMobile = useMediaQuery('(max-width: 639px)')
-
-  // Each section is a full-width band with its own background; the inner
-  // container re-centers content at 800px. hPad is the shared horizontal gutter.
-  const hPad = isMobile ? 16 : 24
-  const innerContainer = { maxWidth: 800, margin: '0 auto' }
-  // Subtle dot-grid texture, applied only to the cream hero and form bands.
-  const dotGrid = {
-    backgroundImage: 'radial-gradient(circle, #D6D3CB 0.5px, transparent 0.5px)',
-    backgroundSize: '24px 24px',
-  }
-
-  // Decorative full-width gradient spacers that blend one section's background
-  // into the next, replacing the hard borders between bands. Purely visual.
-  const CREAM = COLORS.bg
-  const WHITE = COLORS.card
-  const DARK = '#1A1A1A'
-  const fade = (from, to, tall = true) => (
-    <div
-      aria-hidden="true"
-      style={{
-        height: tall ? (isMobile ? 28 : 40) : isMobile ? 28 : 32,
-        background: `linear-gradient(to bottom, ${from}, ${to})`,
-        margin: 0,
-        padding: 0,
-        pointerEvents: 'none',
-      }}
-    />
-  )
+  // Category accent (dark variant) for the results glow, keyed to the event.
+  const selectedCat = EVENTS.find((e) => e.id === selectedEvent)?.cat || 'amber'
 
   return (
-    <div style={{ minHeight: '100vh', background: COLORS.bg, color: COLORS.textPrimary }}>
-      {/* SECTION 1 — Hero: cream + dot grid */}
-      <div style={{ background: COLORS.bg, ...dotGrid }}>
-        <div
-          style={{
-            ...innerContainer,
-            padding: isMobile ? `40px ${hPad}px 48px` : `64px ${hPad}px 48px`,
-          }}
-        >
-          <header>
-            <div
-              style={{
-                display: 'inline-block',
-                borderBottom: `2px solid ${COLORS.textPrimary}`,
-                paddingBottom: 4,
-                marginBottom: 16,
-              }}
-            >
-              <span
-                style={{ fontFamily: FONTS.serif, fontSize: isMobile ? 44 : 64, lineHeight: 1 }}
-              >
-                Tax<span style={{ fontStyle: 'italic' }}>Shift</span>
-              </span>
-            </div>
-            <h1
-              style={{
-                fontFamily: FONTS.serif,
-                fontSize: 30,
-                fontWeight: 400,
-                lineHeight: 1.3,
-                color: COLORS.textPrimary,
-                margin: 0,
-              }}
-            >
-              See how your next life event
+    <>
+      <Nav onDark={!!results} onStart={goToSelector} />
+
+      {/* HERO — light editorial, two columns */}
+      <section className="hero band paper-grid" id="top">
+        <div className="wrap hero-grid">
+          <div>
+            <Reveal className="hero-eyebrow">
+              <span className="pulse" />
+              <span className="kicker">Forward-looking tax estimator</span>
+            </Reveal>
+            <Reveal as="h1" delay={1}>
+              See how your next <span className="em">life event</span>
               <br />
-              changes your taxes.
-            </h1>
-            <p
-              style={{
-                fontFamily: FONTS.sans,
-                fontSize: 15,
-                color: COLORS.textSecondary,
-                margin: '12px 0 0',
-              }}
-            >
-              Forward-looking tax estimates for life's biggest financial decisions
-            </p>
-          </header>
-
-          <HeroPreview />
-
-          <Disclaimer />
+              changes your <span className="u">taxes</span>.
+            </Reveal>
+            <Reveal as="p" className="hero-sub" delay={2}>
+              Most tax tools look backward at what you owe. TaxShift looks forward — pick a
+              decision, enter a few numbers, and watch the before-and-after.
+            </Reveal>
+            <Reveal className="hero-actions" delay={3}>
+              <button type="button" className="btn btn-primary" onClick={goToSelector}>
+                Estimate my shift
+                <ArrowRight />
+              </button>
+              <button type="button" className="btn btn-ghost" onClick={goToSelector}>
+                Browse life events
+              </button>
+            </Reveal>
+          </div>
+          <Reveal delay={2}>
+            <HeroPreview />
+          </Reveal>
         </div>
-      </div>
+      </section>
 
-      {/* Transition: hero cream → credibility dark */}
-      {fade(CREAM, DARK)}
+      {/* Transition: hero paper → ticker void */}
+      <div className="fade-to-dark" aria-hidden="true" />
 
-      {/* CREDIBILITY STRIP — compact dark data bar bridging hero and selection */}
+      {/* CREDIBILITY TICKER — dark marquee */}
       <CredibilityStrip />
 
-      {/* Transition: credibility dark → selection white */}
-      {fade(DARK, WHITE)}
+      {/* Transition: ticker void → selector paper */}
+      <div className="fade-to-light" aria-hidden="true" />
 
-      {/* SECTION 2 — Selection: clean white stage, no dots */}
-      <div style={{ background: COLORS.card }}>
-        <div
-          style={{
-            ...innerContainer,
-            padding: isMobile ? `32px ${hPad}px` : `40px ${hPad}px 48px`,
-          }}
-        >
-          <HowItWorks />
-          <div style={{ marginTop: 32 }}>
-            <EventSelector selectedEvent={selectedEvent} onSelect={handleSelect} />
-          </div>
+      {/* SELECTOR — event grid + specs */}
+      <section className="band paper-grid" ref={selectorRef}>
+        <div className="wrap section">
+          <Reveal>
+            <HowItWorks stage={0} />
+          </Reveal>
+          <EventSelector selectedEvent={selectedEvent} onSelect={handleSelect} />
           <CoverageSection />
         </div>
-      </div>
+      </section>
 
-      {/* Transition: selection white → cream (form when selected, else footer) */}
-      {fade(WHITE, CREAM, false)}
-
-      {/* SECTION 3 — Form: back to warm cream + dot grid */}
+      {/* FORM */}
       {selectedEvent && (
-        <div style={{ background: COLORS.bg, ...dotGrid }}>
-          <div
-            ref={formRef}
-            key={selectedEvent}
-            className="ts-fade-in"
-            style={{
-              ...innerContainer,
-              padding: isMobile ? `32px ${hPad}px` : `40px ${hPad}px`,
-              scrollMarginTop: 24,
-            }}
-          >
+        <section className="form-band band paper-grid" ref={formRef} key={selectedEvent}>
+          <div className="wrap">
             <InputForm
               eventId={selectedEvent}
               formData={formData}
@@ -338,25 +299,21 @@ export default function App() {
               errors={errors}
             />
           </div>
-        </div>
+        </section>
       )}
 
-      {/* Transition: form cream → results dark */}
-      {results && fade(CREAM, DARK)}
+      {/* Transition: form paper → results void */}
+      {results && <div className="fade-to-dark" aria-hidden="true" />}
 
-      {/* SECTION 4 — Results: dramatic full-width dark band */}
+      {/* RESULTS — dramatic dark reveal */}
       {results && (
-        <div style={{ background: '#1A1A1A' }}>
-          <div
-            ref={resultsRef}
-            key={calcId}
-            className="ts-fade-in"
-            style={{
-              ...innerContainer,
-              padding: isMobile ? `32px ${hPad}px` : `48px ${hPad}px`,
-              scrollMarginTop: 24,
-            }}
-          >
+        <section
+          className="results"
+          ref={resultsRef}
+          key={calcId}
+          style={{ '--accent-d': `var(--c-${selectedCat}-d)` }}
+        >
+          <div className="wrap">
             <ResultsDashboard
               results={results}
               eventId={selectedEvent}
@@ -365,39 +322,25 @@ export default function App() {
               onTryAnother={handleReset}
             />
           </div>
-        </div>
+        </section>
       )}
 
-      {/* Transition: results dark → footer cream */}
-      {results && fade(DARK, CREAM)}
+      {/* Transition: results void → footer paper */}
+      {results && <div className="fade-to-light" aria-hidden="true" />}
 
-      {/* SECTION 5 — Footer: cream */}
-      <div style={{ background: COLORS.bg }}>
-        <div style={{ ...innerContainer, padding: `0 ${hPad}px` }}>
-          <footer style={{ borderTop: `1px solid ${COLORS.border}`, padding: '20px 0 40px' }}>
-            <p
-              style={{
-                fontFamily: FONTS.sans,
-                fontSize: 12,
-                color: COLORS.textSecondary,
-                margin: 0,
-              }}
-            >
-              Built for DSOC Summer Edition 2026 · Tax, Compliance &amp; Regulatory Innovation
-            </p>
-            <p
-              style={{
-                fontFamily: FONTS.sans,
-                fontSize: 11,
-                color: COLORS.tagMuted,
-                margin: '8px 0 0',
-              }}
-            >
-              Built with React · Recharts · Gemini · Vercel
-            </p>
-          </footer>
+      {/* FOOTER */}
+      <footer className="band paper-grid footer">
+        <div className="wrap">
+          <Disclaimer />
+          <div className="footer-row">
+            <Wordmark fontSize={22} />
+            <div className="meta">
+              Built for <b>DSOC Summer Edition 2026</b> · Tax, Compliance &amp; Regulatory
+              Innovation
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
+      </footer>
+    </>
   )
 }

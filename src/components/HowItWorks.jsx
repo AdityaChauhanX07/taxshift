@@ -1,49 +1,28 @@
-import { COLORS, FONTS } from '../utils/theme.js'
-import { useMediaQuery } from '../utils/useMediaQuery.js'
-
 const STEPS = [
-  { num: '01', text: 'Pick a life event' },
-  { num: '02', text: 'Enter your numbers' },
-  { num: '03', text: 'See your tax impact' },
+  ['01', 'Pick a life event'],
+  ['02', 'Enter your numbers'],
+  ['03', 'See your tax impact'],
 ]
 
 /**
- * Subtle horizontal 3-step wayfinding strip shown between the disclaimer and
- * the event cards. Stacks vertically on mobile; connectors are desktop-only.
+ * Horizontal 3-step wayfinding strip. Highlights the active stage; dashed
+ * connectors sit between steps. Reused at the top of the selector and the form.
+ * @param {{ stage?: number }} props - index (0-2) of the current step
  */
-export default function HowItWorks() {
-  const isMobile = useMediaQuery('(max-width: 639px)')
-
-  const step = (s) => (
-    <div key={s.num} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      <span style={{ fontFamily: FONTS.mono, fontSize: 11, color: COLORS.accent }}>{s.num}</span>
-      <span style={{ fontFamily: FONTS.sans, fontSize: 13, color: COLORS.textSecondary }}>
-        {s.text}
-      </span>
-    </div>
-  )
-
-  const connector = (key) => (
-    <div
-      key={key}
-      style={{ flex: 1, borderTop: `1px dashed ${COLORS.border}`, margin: '0 14px', minWidth: 16 }}
-    />
-  )
-
+export default function HowItWorks({ stage = 0 }) {
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: isMobile ? 'column' : 'row',
-        alignItems: isMobile ? 'flex-start' : 'center',
-        gap: isMobile ? 10 : 0,
-      }}
-    >
-      {isMobile
-        ? STEPS.map(step)
-        : STEPS.flatMap((s, i) =>
-            i < STEPS.length - 1 ? [step(s), connector(`c${i}`)] : [step(s)],
-          )}
+    <div className="steps">
+      {STEPS.flatMap(([num, text], i) => {
+        const node = (
+          <div key={`s${i}`} className={`step${i === stage ? ' active' : ''}`}>
+            <span className="n">{num}</span>
+            <span className="t">{text}</span>
+          </div>
+        )
+        return i < STEPS.length - 1
+          ? [node, <div key={`l${i}`} className="step-line" />]
+          : [node]
+      })}
     </div>
   )
 }
