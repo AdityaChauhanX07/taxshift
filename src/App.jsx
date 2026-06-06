@@ -9,6 +9,7 @@ import { fetchAIInsight } from './ai/apiClient.js'
 import Disclaimer from './components/Disclaimer.jsx'
 import HeroPreview from './components/HeroPreview.jsx'
 import CredibilityStrip from './components/CredibilityStrip.jsx'
+import CoverageSection from './components/CoverageSection.jsx'
 import HowItWorks from './components/HowItWorks.jsx'
 import EventSelector from './components/EventSelector.jsx'
 import InputForm, { EVENT_FIELDS } from './components/InputForm.jsx'
@@ -278,6 +279,7 @@ export default function App() {
           background: COLORS.card,
           borderTop: `1px solid ${COLORS.disclaimerBg}`,
           borderBottom: `1px solid ${COLORS.disclaimerBg}`,
+          marginBottom: 8,
         }}
       >
         <div
@@ -290,6 +292,7 @@ export default function App() {
           <div style={{ marginTop: 32 }}>
             <EventSelector selectedEvent={selectedEvent} onSelect={handleSelect} />
           </div>
+          <CoverageSection />
         </div>
       </div>
 
